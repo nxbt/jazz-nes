@@ -1,1 +1,0 @@
-/usr/bin/c++ -g CMakeFiles/jazz_nes.dir/src/main.cpp.o -o jazz_nes 
