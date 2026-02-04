@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/jazz_nes.dir/main.cpp.o"
-  "CMakeFiles/jazz_nes.dir/main.cpp.o.d"
+  "CMakeFiles/jazz_nes.dir/src/main.cpp.o"
+  "CMakeFiles/jazz_nes.dir/src/main.cpp.o.d"
   "jazz_nes"
   "jazz_nes.pdb"
 )

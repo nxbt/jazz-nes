@@ -1,7 +1,7 @@
 [
 {
   "directory": "/home/jasmine/jazz_nes/build",
-  "command": "/usr/bin/c++   -g -o CMakeFiles/jazz_nes.dir/main.cpp.o -c /home/jasmine/jazz_nes/main.cpp",
-  "file": "/home/jasmine/jazz_nes/main.cpp"
+  "command": "/usr/bin/c++   -g -o CMakeFiles/jazz_nes.dir/src/main.cpp.o -c /home/jasmine/jazz_nes/src/main.cpp",
+  "file": "/home/jasmine/jazz_nes/src/main.cpp"
 }
 ]

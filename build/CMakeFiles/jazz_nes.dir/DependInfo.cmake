@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/jasmine/jazz_nes/main.cpp" "CMakeFiles/jazz_nes.dir/main.cpp.o" "gcc" "CMakeFiles/jazz_nes.dir/main.cpp.o.d"
+  "/home/jasmine/jazz_nes/src/main.cpp" "CMakeFiles/jazz_nes.dir/src/main.cpp.o" "gcc" "CMakeFiles/jazz_nes.dir/src/main.cpp.o.d"
   )
 
 # Targets to which this target links.
