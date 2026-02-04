@@ -1,0 +1,3 @@
+/home/jasmine/jazz_nes/build/CMakeFiles/jazz_nes.dir
+/home/jasmine/jazz_nes/build/CMakeFiles/edit_cache.dir
+/home/jasmine/jazz_nes/build/CMakeFiles/rebuild_cache.dir
