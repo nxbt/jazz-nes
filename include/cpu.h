@@ -4,10 +4,15 @@
 #include "bus.h"
 
 class Cpu {
+public:
+    Cpu(Bus &bus);
+
 private:
-    // program counter, accumulator, x & y registers, processor status, stack pointer
+    // program counter, accumulator, x & y registers, processor status, stack pointer, instruction register
     uint16_t m_pc;
-    uint8_t m_a, m_x, m_y, m_p, m_s;
+    uint8_t m_a, m_x, m_y, m_p, m_s, m_ir;
+
+    int m_clock_lead = 0;
 
     Bus& m_bus;
 
@@ -71,7 +76,4 @@ private:
     void instr_txa();
     void instr_txs();
     void instr_tya();
-
-public:
-    Cpu(Bus &bus);
 };

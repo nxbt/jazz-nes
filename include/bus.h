@@ -4,9 +4,18 @@
 
 class Bus {
 public:
-    uint16_t cpu_address;
-    uint8_t cpu_data;
+    Bus();
+    ~Bus();
 
-    uint16_t ppu_address;
-    uint8_t ppu_data;
+    uint16_t m_address;
+    uint8_t m_data;
+
+    const uint16_t read_address() { return m_address; }
+    const uint8_t read_data() { return m_data; }
+
+    void write_address(const uint16_t);
+    void write_data(const uint8_t);
+
+private:
+
 };
