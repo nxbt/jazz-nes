@@ -10,11 +10,13 @@ public:
     uint16_t m_address;
     uint8_t m_data;
 
-    const uint16_t read_address() { return m_address; }
-    const uint8_t read_data() { return m_data; }
+    uint16_t read_address();
+    uint8_t read_data();
+    uint8_t read_data(uint16_t address);
 
-    void write_address(const uint16_t);
-    void write_data(const uint8_t);
+    void write_address(uint16_t address);
+    void write_data(uint8_t data);
+    void write_data(uint16_t address, uint8_t data);
 
 private:
 

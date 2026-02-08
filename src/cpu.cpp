@@ -3,8 +3,20 @@
 #include "bus.h"
 
 #include <cstdint>
+#include <functional>
+#include <unordered_map>
 
-const uint8_t OPCODE_MASK = 0xe0;
+auto Cpu::instr_map = {
+    {0x00, Cpu::instr_brk},
+    {0x69, Cpu::instr_adc_i},
+    {0x65, Cpu::instr_adc_d},
+    {0x75, Cpu::instr_adc_dx},
+    {0x6D, Cpu::instr_adc_a},
+    {0x7D, Cpu::instr_adc_ax},
+    {0x79, Cpu::instr_adc_ay},
+    {0x61, Cpu::instr_adc_ix},
+    {0x71, Cpu::instr_adc_iy},
+};
 
 Cpu::Cpu(Bus &bus): m_bus(bus) {}
 
@@ -18,22 +30,39 @@ void Cpu::tick() {
 }
 
 /*
- * Fetches next instruction from the program counter (PC)
+ * Fetches next instruction byte from the program counter (PC)
  */
 void Cpu::ir_fetch() {
-    m_bus.write_address(m_pc);
-    m_ir = m_bus.read_data();
-    m_pc++;
+    m_ir = m_bus.read_data(m_pc++);
 }
 
 /*
  * Decodes the instruction register and executes the instruction
  */
 void Cpu::ir_decode() {
-    auto opcode = m_ir & OPCODE_MASK;
+    instr_map[m_ir]();
 }
 
-void Cpu::instr_adc() {}
+void Cpu::instr_adc(u_int8_t arg) {
+    uint16_t result = m_a + arg + m_flag_c;
+    m_a = result;
+
+    m_flag_c = result > 0xFF;
+    m_flag_z = result == 0;
+    m_flag_v = (result ^ m_a) & (result ^ arg) & 0x80;
+    m_flag_n = m_a & 0x80;
+}
+void Cpu::instr_adc_i() {
+    instr_adc(m_bus.read_data(m_pc++));
+}
+void Cpu::instr_adc_d() {}
+void Cpu::instr_adc_dx() {}
+void Cpu::instr_adc_a() {}
+void Cpu::instr_adc_ax() {}
+void Cpu::instr_adc_ay() {}
+void Cpu::instr_adc_ix() {}
+void Cpu::instr_adc_iy() {}
+
 void Cpu::instr_and() {}
 void Cpu::instr_asl() {}
 void Cpu::instr_bcc() {}
