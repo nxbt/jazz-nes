@@ -1,9 +1,7 @@
 #include <iostream>
 
 int main() {
-    uint8_t a = 0xFF;
-    uint8_t b = 0x01;
-    uint16_t result = a + b;
-    std::cout << (int) result << std::endl;
+    bool a = true;
+    std::cout << (int) (a << 7 | a << 6) << std::endl;
     return 0;
 }

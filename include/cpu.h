@@ -38,26 +38,43 @@ private:
     static std::map<uint8_t, std::function<void(Cpu &)>> instr_map;
 
     void ir_fetch();
+    void stack_push(uint8_t data);
+    uint8_t stack_pull();
 
     // addressing modes
-    static std::function<void(Cpu &)> addr_mode_i(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_d(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_a(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_dx(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_dy(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_ax(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_ay(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_ix(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_iy(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_r_i(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_r_d(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_r_a(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_r_dx(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_r_dy(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_r_ax(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_r_ay(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_r_ix(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_r_iy(std::function<void(Cpu &, uint8_t)> instr);
+
+    static std::function<void(Cpu &)> addr_mode_w_d(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_a(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_dx(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_dy(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_ax(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_ay(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_ix(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_iy(std::function<void(Cpu &, uint8_t)> instr);
+
+    static std::function<void(Cpu &)> addr_mode_rmw_ac(std::function<uint8_t(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_rmw_d(std::function<uint8_t(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_rmw_a(std::function<uint8_t(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_rmw_dx(std::function<uint8_t(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_rmw_ax(std::function<uint8_t(Cpu &, uint8_t)> instr);
 
     // instructions
     void instr_adc(uint8_t arg);
-    void instr_and();
-    void instr_asl();
+    void instr_and(uint8_t arg);
+    uint8_t instr_asl(uint8_t arg);
     void instr_bcc();
     void instr_bcs();
     void instr_beq();
-    void instr_bit();
+    void instr_bit(uint8_t arg);
     void instr_bmi();
     void instr_bne();
     void instr_bpl();
@@ -68,14 +85,14 @@ private:
     void instr_cld();
     void instr_cli();
     void instr_clv();
-    void instr_cmp();
-    void instr_cpx();
-    void instr_cpy();
-    void instr_dec();
+    void instr_cmp(uint8_t arg);
+    void instr_cpx(uint8_t arg);
+    void instr_cpy(uint8_t arg);
+    uint8_t instr_dec(uint8_t arg);
     void instr_dex();
     void instr_dey();
-    void instr_eor();
-    void instr_inc();
+    void instr_eor(uint8_t arg);
+    uint8_t instr_inc(uint8_t arg);
     void instr_inx();
     void instr_iny();
     void instr_jmp();
