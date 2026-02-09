@@ -4,18 +4,11 @@
 
 #include <cstdint>
 #include <functional>
-#include <unordered_map>
+#include <map>
 
-auto Cpu::instr_map = {
-    {0x00, Cpu::instr_brk},
-    {0x69, Cpu::instr_adc_i},
-    {0x65, Cpu::instr_adc_d},
-    {0x75, Cpu::instr_adc_dx},
-    {0x6D, Cpu::instr_adc_a},
-    {0x7D, Cpu::instr_adc_ax},
-    {0x79, Cpu::instr_adc_ay},
-    {0x61, Cpu::instr_adc_ix},
-    {0x71, Cpu::instr_adc_iy},
+std::map<uint8_t, std::function<void(Cpu &)>> Cpu::instr_map = {
+    {0x00, instr_brk},
+    {0x69, addr_mode_i(instr_adc)},
 };
 
 Cpu::Cpu(Bus &bus): m_bus(bus) {}
@@ -26,24 +19,83 @@ void Cpu::tick() {
     }
 
     ir_fetch();
-    ir_decode();
 }
 
-/*
- * Fetches next instruction byte from the program counter (PC)
- */
+// Fetches and executes next instruction from program counter (PC)
 void Cpu::ir_fetch() {
-    m_ir = m_bus.read_data(m_pc++);
+    uint16_t ir = m_bus.read_data(m_pc++);
+    instr_map[ir](*this);
 }
 
-/*
- * Decodes the instruction register and executes the instruction
- */
-void Cpu::ir_decode() {
-    instr_map[m_ir]();
+// immidiate addressing mode wrapper for any instruction
+std::function<void(Cpu &)> Cpu::addr_mode_i(std::function<void(Cpu &, uint8_t)> instr) {
+    return [&](Cpu &cpu) -> void {
+        instr(cpu, cpu.m_bus.read_data(cpu.m_pc++));
+    };
 }
 
-void Cpu::instr_adc(u_int8_t arg) {
+// zero page addressing mode wrapper for any instruction
+std::function<void(Cpu &)> Cpu::addr_mode_d(std::function<void(Cpu &, uint8_t)> instr) {
+    return [&](Cpu &cpu) -> void {
+        auto addr = cpu.m_bus.read_data(cpu.m_pc++);
+        instr(cpu, cpu.m_bus.read_data(addr));
+    };
+}
+
+// absolute addressing mode wrapper for any instruction
+std::function<void(Cpu &)> Cpu::addr_mode_a(std::function<void(Cpu &, uint8_t)> instr) {
+    return [&](Cpu &cpu) -> void {
+        uint16_t l_addr = cpu.m_bus.read_data(cpu.m_pc++);
+        uint16_t h_addr = cpu.m_bus.read_data(cpu.m_pc++);
+        instr(cpu, cpu.m_bus.read_data((h_addr << 8) | l_addr));
+    };
+}
+
+// zero page x indexed addressing mode wrapper for any instruction
+static std::function<void(Cpu &)> addr_mode_dx(std::function<void(Cpu &, uint8_t)> instr) {
+    return [&](Cpu &cpu) -> void {
+
+    };
+}
+
+// zero page y indexed addressing mode wrapper for any instruction
+static std::function<void(Cpu &)> addr_mode_dy(std::function<void(Cpu &, uint8_t)> instr) {
+    return [&](Cpu &cpu) -> void {
+
+    };
+}
+
+
+// absolute x indexed addressing mode wrapper for any instruction
+static std::function<void(Cpu &)> addr_mode_ax(std::function<void(Cpu &, uint8_t)> instr) {
+    return [&](Cpu &cpu) -> void {
+
+    };
+}
+
+// absolute y indexed addressing mode wrapper for any instruction
+static std::function<void(Cpu &)> addr_mode_ay(std::function<void(Cpu &, uint8_t)> instr) {
+    return [&](Cpu &cpu) -> void {
+
+    };
+}
+
+// indirect x indexed addressing mode wrapper for any instruction
+static std::function<void(Cpu &)> addr_mode_ix(std::function<void(Cpu &, uint8_t)> instr) {
+    return [&](Cpu &cpu) -> void {
+
+    };
+}
+
+// indirect y index addressing mode wrapper for any instruction
+static std::function<void(Cpu &)> addr_mode_iy(std::function<void(Cpu &, uint8_t)> instr) {
+    return [&](Cpu &cpu) -> void {
+
+    };
+}
+
+// add with carry
+void Cpu::instr_adc(uint8_t arg) {
     uint16_t result = m_a + arg + m_flag_c;
     m_a = result;
 
@@ -52,16 +104,6 @@ void Cpu::instr_adc(u_int8_t arg) {
     m_flag_v = (result ^ m_a) & (result ^ arg) & 0x80;
     m_flag_n = m_a & 0x80;
 }
-void Cpu::instr_adc_i() {
-    instr_adc(m_bus.read_data(m_pc++));
-}
-void Cpu::instr_adc_d() {}
-void Cpu::instr_adc_dx() {}
-void Cpu::instr_adc_a() {}
-void Cpu::instr_adc_ax() {}
-void Cpu::instr_adc_ay() {}
-void Cpu::instr_adc_ix() {}
-void Cpu::instr_adc_iy() {}
 
 void Cpu::instr_and() {}
 void Cpu::instr_asl() {}
