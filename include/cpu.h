@@ -42,7 +42,7 @@ private:
     uint8_t stack_pull();
 
     // addressing modes
-    static std::function<void(Cpu &)> addr_mode_r_i(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_r_im(std::function<void(Cpu &, uint8_t)> instr);
     static std::function<void(Cpu &)> addr_mode_r_d(std::function<void(Cpu &, uint8_t)> instr);
     static std::function<void(Cpu &)> addr_mode_r_a(std::function<void(Cpu &, uint8_t)> instr);
     static std::function<void(Cpu &)> addr_mode_r_dx(std::function<void(Cpu &, uint8_t)> instr);
@@ -51,15 +51,16 @@ private:
     static std::function<void(Cpu &)> addr_mode_r_ay(std::function<void(Cpu &, uint8_t)> instr);
     static std::function<void(Cpu &)> addr_mode_r_ix(std::function<void(Cpu &, uint8_t)> instr);
     static std::function<void(Cpu &)> addr_mode_r_iy(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_r_i(std::function<void(Cpu &, uint8_t)> instr);
 
-    static std::function<void(Cpu &)> addr_mode_w_d(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_w_a(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_w_dx(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_w_dy(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_w_ax(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_w_ay(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_w_ix(std::function<void(Cpu &, uint8_t)> instr);
-    static std::function<void(Cpu &)> addr_mode_w_iy(std::function<void(Cpu &, uint8_t)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_d(std::function<uint8_t(Cpu &)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_a(std::function<uint8_t(Cpu &)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_dx(std::function<uint8_t(Cpu &)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_dy(std::function<uint8_t(Cpu &)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_ax(std::function<uint8_t(Cpu &)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_ay(std::function<uint8_t(Cpu &)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_ix(std::function<uint8_t(Cpu &)> instr);
+    static std::function<void(Cpu &)> addr_mode_w_iy(std::function<uint8_t(Cpu &)> instr);
 
     static std::function<void(Cpu &)> addr_mode_rmw_ac(std::function<uint8_t(Cpu &, uint8_t)> instr);
     static std::function<void(Cpu &)> addr_mode_rmw_d(std::function<uint8_t(Cpu &, uint8_t)> instr);
@@ -95,29 +96,29 @@ private:
     uint8_t instr_inc(uint8_t arg);
     void instr_inx();
     void instr_iny();
-    void instr_jmp();
-    void instr_jsr();
-    void instr_lda();
-    void instr_ldx();
-    void instr_ldy();
-    void instr_lsr();
+    void instr_jmp(uint8_t arg);
+    void instr_jsr(uint8_t arg);
+    void instr_lda(uint8_t arg);
+    void instr_ldx(uint8_t arg);
+    void instr_ldy(uint8_t arg);
+    uint8_t instr_lsr(uint8_t arg);
     void instr_nop();
-    void instr_ora();
+    void instr_ora(uint8_t arg);
     void instr_pha();
     void instr_php();
     void instr_pla();
     void instr_plp();
-    void instr_rol();
-    void instr_ror();
+    uint8_t instr_rol(uint8_t arg);
+    uint8_t instr_ror(uint8_t arg);
     void instr_rti();
     void instr_rts();
-    void instr_sbc();
+    void instr_sbc(uint8_t arg);
     void instr_sec();
     void instr_sed();
     void instr_sei();
-    void instr_sta();
-    void instr_stx();
-    void instr_sty();
+    uint8_t instr_sta();
+    uint8_t instr_stx();
+    uint8_t instr_sty();
     void instr_tax();
     void instr_tay();
     void instr_tsx();
