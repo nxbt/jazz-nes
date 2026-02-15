@@ -163,6 +163,8 @@ std::map<uint8_t, std::function<void(Cpu &)>> Cpu::instr_map = {
 
 Cpu::Cpu(Bus &bus): m_bus(bus) {}
 
+Cpu::~Cpu() {}
+
 void Cpu::tick() {
     if(m_clock_lead > 0) {
         m_clock_lead--;
@@ -393,382 +395,382 @@ std::function<void(Cpu &)> Cpu::addr_mode_w_iy(std::function<uint8_t(Cpu &)> ins
 }
 
 // add with carry
-void Cpu::instr_adc(uint8_t arg) {
-    uint16_t result = m_a + arg + m_flag_c;
-    m_a = result;
+void Cpu::instr_adc(Cpu cpu, uint8_t arg) {
+    uint16_t result = cpu.m_a + arg + cpu.m_flag_c;
+    cpu.m_a = result;
 
-    m_flag_c = result > 0xFF;
-    m_flag_z = result == 0;
-    m_flag_v = (result ^ m_a) & (result ^ arg) & 0x80;
-    m_flag_n = m_a & 0x80;
+    cpu.m_flag_c = result > 0xFF;
+    cpu.m_flag_z = result == 0;
+    cpu.m_flag_v = (result ^ cpu.m_a) & (result ^ arg) & 0x80;
+    cpu.m_flag_n = cpu.m_a & 0x80;
 }
 
 // bitwise and
-void Cpu::instr_and(uint8_t arg) {
-    uint8_t result = m_a & arg;
-    m_a = result;
+void Cpu::instr_and(Cpu cpu, uint8_t arg) {
+    uint8_t result = cpu.m_a & arg;
+    cpu.m_a = result;
 
-    m_flag_z = result == 0;
-    m_flag_n = result & 0x80;
+    cpu.m_flag_z = result == 0;
+    cpu.m_flag_n = result & 0x80;
 }
 
 // arithmetic shift left
-uint8_t Cpu::instr_asl(uint8_t arg) {
+uint8_t Cpu::instr_asl(Cpu cpu, uint8_t arg) {
     uint8_t result = arg < 1;
 
-    m_flag_c = arg & 0x80;
-    m_flag_z = result == 0;
-    m_flag_n = result & 0x80;
+    cpu.m_flag_c = arg & 0x80;
+    cpu.m_flag_z = result == 0;
+    cpu.m_flag_n = result & 0x80;
 
     return result;
 }
 
 // branch if carry clear
-void Cpu::instr_bcc() {
-    int8_t arg = m_bus.read_data(m_pc++);
-    if(!m_flag_c) {
-        m_pc += arg;
+void Cpu::instr_bcc(Cpu cpu) {
+    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    if(!cpu.m_flag_c) {
+        cpu.m_pc += arg;
     }
 }
 
 // branch if carry set
-void Cpu::instr_bcs() {
-    int8_t arg = m_bus.read_data(m_pc++);
-    if(m_flag_c) {
-        m_pc += arg;
+void Cpu::instr_bcs(Cpu cpu) {
+    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    if(cpu.m_flag_c) {
+        cpu.m_pc += arg;
     }
 }
 
 // branch if equal
-void Cpu::instr_beq() {
-    int8_t arg = m_bus.read_data(m_pc++);
-    if(m_flag_z) {
-        m_pc += arg;
+void Cpu::instr_beq(Cpu cpu) {
+    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    if(cpu.m_flag_z) {
+        cpu.m_pc += arg;
     }
 }
 
 // bit test
-void Cpu::instr_bit(uint8_t arg) {
-    int8_t result = m_a & arg;
-    m_flag_z = result == 0;
-    m_flag_v = arg & 0x40;
-    m_flag_n = arg & 0x80;
+void Cpu::instr_bit(Cpu cpu, uint8_t arg) {
+    int8_t result = cpu.m_a & arg;
+    cpu.m_flag_z = result == 0;
+    cpu.m_flag_v = arg & 0x40;
+    cpu.m_flag_n = arg & 0x80;
 }
 
 // branch if minus
-void Cpu::instr_bmi() {
-    int8_t arg = m_bus.read_data(m_pc++);
-    if(m_flag_n) {
-        m_pc += arg;
+void Cpu::instr_bmi(Cpu cpu) {
+    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    if(cpu.m_flag_n) {
+        cpu.m_pc += arg;
     }
 }
 
 // branch if not equal
-void Cpu::instr_bne() {
-    int8_t arg = m_bus.read_data(m_pc++);
-    if(!m_flag_z) {
-        m_pc += arg;
+void Cpu::instr_bne(Cpu cpu) {
+    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    if(!cpu.m_flag_z) {
+        cpu.m_pc += arg;
     }
 }
 
 // branch if plus
-void Cpu::instr_bpl() {
-    int8_t arg = m_bus.read_data(m_pc++);
-    if(!m_flag_n) {
-        m_pc += arg;
+void Cpu::instr_bpl(Cpu cpu) {
+    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    if(!cpu.m_flag_n) {
+        cpu.m_pc += arg;
     }
 }
 
 // break (software IRQ)
-void Cpu::instr_brk() {
-    m_pc++;
-    stack_push(m_pc >> 8);
-    stack_push(m_pc);
-    uint8_t ps = m_flag_n << 7 | m_flag_v << 6 | 1 << 5 | 1 << 4 |
-        m_flag_d << 3 | m_flag_i << 2 | m_flag_z << 1 | m_flag_c << 0;
-    stack_push(ps);
-    m_pc = 0xFFFE;
+void Cpu::instr_brk(Cpu cpu) {
+    cpu.m_pc++;
+    cpu.stack_push(cpu.m_pc >> 8);
+    cpu.stack_push(cpu.m_pc);
+    uint8_t ps = cpu.m_flag_n << 7 | cpu.m_flag_v << 6 | 1 << 5 | 1 << 4 |
+        cpu.m_flag_d << 3 | cpu.m_flag_i << 2 | cpu.m_flag_z << 1 | cpu.m_flag_c << 0;
+    cpu.stack_push(ps);
+    cpu.m_pc = 0xFFFE;
 }
 
 // branch if overflow clear
-void Cpu::instr_bvc() {
-    int8_t arg = m_bus.read_data(m_pc++);
-    if(!m_flag_v) {
-        m_pc += arg;
+void Cpu::instr_bvc(Cpu cpu) {
+    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    if(!cpu.m_flag_v) {
+        cpu.m_pc += arg;
     }
 }
 
 // branch if overflow set
-void Cpu::instr_bvs() {
-    int8_t arg = m_bus.read_data(m_pc++);
-    if(m_flag_v) {
-        m_pc += arg;
+void Cpu::instr_bvs(Cpu cpu) {
+    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    if(cpu.m_flag_v) {
+        cpu.m_pc += arg;
     }
 }
 
 // clear carry
-void Cpu::instr_clc() {
-    m_flag_c = false;
+void Cpu::instr_clc(Cpu cpu) {
+    cpu.m_flag_c = false;
 }
 
 // clear decimal
-void Cpu::instr_cld() {
-    m_flag_d = false;
+void Cpu::instr_cld(Cpu cpu) {
+    cpu.m_flag_d = false;
 }
 
 // clear interrupt disable
-void Cpu::instr_cli() {
-    m_flag_i = false;
+void Cpu::instr_cli(Cpu cpu) {
+    cpu.m_flag_i = false;
 }
 
 // clear overflow
-void Cpu::instr_clv() {
-    m_flag_v = false;
+void Cpu::instr_clv(Cpu cpu) {
+    cpu.m_flag_v = false;
 }
 
 // compare A
-void Cpu::instr_cmp(uint8_t arg) {
-    uint8_t result = m_a - arg;
+void Cpu::instr_cmp(Cpu cpu, uint8_t arg) {
+    uint8_t result = cpu.m_a - arg;
 
-    m_flag_c = m_a > arg;
-    m_flag_z = m_a == arg;
-    m_flag_n = result & 0x80;
+    cpu.m_flag_c = cpu.m_a > arg;
+    cpu.m_flag_z = cpu.m_a == arg;
+    cpu.m_flag_n = result & 0x80;
 }
 
 // compare X
-void Cpu::instr_cpx(uint8_t arg) {
-    uint8_t result = m_x - arg;
+void Cpu::instr_cpx(Cpu cpu, uint8_t arg) {
+    uint8_t result = cpu.m_x - arg;
 
-    m_flag_c = m_x > arg;
-    m_flag_z = m_x == arg;
-    m_flag_n = result & 0x80;
+    cpu.m_flag_c = cpu.m_x > arg;
+    cpu.m_flag_z = cpu.m_x == arg;
+    cpu.m_flag_n = result & 0x80;
 }
 
 // compare Y
-void Cpu::instr_cpy(uint8_t arg) {
-    uint8_t result = m_y - arg;
+void Cpu::instr_cpy(Cpu cpu, uint8_t arg) {
+    uint8_t result = cpu.m_y - arg;
 
-    m_flag_c = m_y > arg;
-    m_flag_z = m_y == arg;
-    m_flag_n = result & 0x80;
+    cpu.m_flag_c = cpu.m_y > arg;
+    cpu.m_flag_z = cpu.m_y == arg;
+    cpu.m_flag_n = result & 0x80;
 }
 
 // decrement memory
-uint8_t Cpu::instr_dec(uint8_t arg) {
+uint8_t Cpu::instr_dec(Cpu cpu, uint8_t arg) {
     return arg - 1;
 }
 
 // decrement X
-void Cpu::instr_dex() {
-    m_x--;
+void Cpu::instr_dex(Cpu cpu) {
+    cpu.m_x--;
 }
 
 // decrement Y
-void Cpu::instr_dey() {
-    m_y--;
+void Cpu::instr_dey(Cpu cpu) {
+    cpu.m_y--;
 }
 
 // bitwise exclusive or
-void Cpu::instr_eor(uint8_t arg) {
-    m_a = m_a ^ arg;
+void Cpu::instr_eor(Cpu cpu, uint8_t arg) {
+    cpu.m_a = cpu.m_a ^ arg;
 }
 
 // increment memory
-uint8_t Cpu::instr_inc(uint8_t arg) {
+uint8_t Cpu::instr_inc(Cpu cpu, uint8_t arg) {
     return arg + 1;
 }
 
 // increment x
-void Cpu::instr_inx() {
-    m_x++;
+void Cpu::instr_inx(Cpu cpu) {
+    cpu.m_x++;
 }
 
 // increment y
-void Cpu::instr_iny() {
-    m_y++;
+void Cpu::instr_iny(Cpu cpu) {
+    cpu.m_y++;
 }
 
 // jump
-void Cpu::instr_jmp(uint8_t arg) {
-    m_pc = arg;
+void Cpu::instr_jmp(Cpu cpu, uint8_t arg) {
+    cpu.m_pc = arg;
 }
 
 // jump to subroutine
-void Cpu::instr_jsr(uint8_t arg) {
-    m_pc++;
-    stack_push(m_pc >> 8);
-    stack_push(m_pc);
-    m_pc = arg;
+void Cpu::instr_jsr(Cpu cpu, uint8_t arg) {
+    cpu.m_pc++;
+    cpu.stack_push(cpu.m_pc >> 8);
+    cpu.stack_push(cpu.m_pc);
+    cpu.m_pc = arg;
 }
 
 // load A
-void Cpu::instr_lda(uint8_t arg) {
-    m_a = arg;
+void Cpu::instr_lda(Cpu cpu, uint8_t arg) {
+    cpu.m_a = arg;
 }
 
 // load X
-void Cpu::instr_ldx(uint8_t arg) {
-    m_x = arg;
+void Cpu::instr_ldx(Cpu cpu, uint8_t arg) {
+    cpu.m_x = arg;
 }
 
 // load Y
-void Cpu::instr_ldy(uint8_t arg) {
-    m_y = arg;
+void Cpu::instr_ldy(Cpu cpu, uint8_t arg) {
+    cpu.m_y = arg;
 }
 
 
 // logical shift right
-uint8_t Cpu::instr_lsr(uint8_t arg) {
-    m_flag_c = arg & 0x01;
+uint8_t Cpu::instr_lsr(Cpu cpu, uint8_t arg) {
+    cpu.m_flag_c = arg & 0x01;
 
     return arg >> 1;
 }
 
 
 // no operation
-void Cpu::instr_nop() {
+void Cpu::instr_nop(Cpu cpu) {
 
 }
 
 // bitwise or
-void Cpu::instr_ora(uint8_t arg) {
-    m_a |= arg;
+void Cpu::instr_ora(Cpu cpu, uint8_t arg) {
+    cpu.m_a |= arg;
 }
 
 // push A
-void Cpu::instr_pha() {
-    stack_push(m_a);
+void Cpu::instr_pha(Cpu cpu) {
+    cpu.stack_push(cpu.m_a);
 }
 
 // push processor status
-void Cpu::instr_php() {
-    uint8_t ps = m_flag_n << 7 | m_flag_v << 6 | 1 << 5 | 1 << 4 |
-        m_flag_d << 3 | m_flag_i << 2 | m_flag_z << 1 | m_flag_c << 0;
-    stack_push(ps);
+void Cpu::instr_php(Cpu cpu) {
+    uint8_t ps = cpu.m_flag_n << 7 | cpu.m_flag_v << 6 | 1 << 5 | 1 << 4 |
+        cpu.m_flag_d << 3 | cpu.m_flag_i << 2 | cpu.m_flag_z << 1 | cpu.m_flag_c << 0;
+    cpu.stack_push(ps);
 }
 
 // pull A
-void Cpu::instr_pla() {
-    m_a = stack_pull();
+void Cpu::instr_pla(Cpu cpu) {
+    cpu.m_a = cpu.stack_pull();
 }
 
 // pull processor status
-void Cpu::instr_plp() {
-    uint8_t ps = stack_pull();
+void Cpu::instr_plp(Cpu cpu) {
+    uint8_t ps = cpu.stack_pull();
 
-    m_flag_n = ps & 0x80;
-    m_flag_v = ps & 0x40;
-    m_flag_d = ps & 0x08;
-    m_flag_i = ps & 0x04;
-    m_flag_z = ps & 0x02;
-    m_flag_c = ps & 0x01;
+    cpu.m_flag_n = ps & 0x80;
+    cpu.m_flag_v = ps & 0x40;
+    cpu.m_flag_d = ps & 0x08;
+    cpu.m_flag_i = ps & 0x04;
+    cpu.m_flag_z = ps & 0x02;
+    cpu.m_flag_c = ps & 0x01;
 }
 
 // rotate left
-uint8_t Cpu::instr_rol(uint8_t arg) {
+uint8_t Cpu::instr_rol(Cpu cpu, uint8_t arg) {
     uint16_t result = arg << 1;
-    result |= m_flag_c;
-    m_flag_c = result & 0x10;
+    result |= cpu.m_flag_c;
+    cpu.m_flag_c = result & 0x10;
     
     return result;
 }
 
 // rotate right
-uint8_t Cpu::instr_ror(uint8_t arg) {
+uint8_t Cpu::instr_ror(Cpu cpu, uint8_t arg) {
     uint16_t result = arg;
-    result |= m_flag_c << 8;
-    m_flag_c = result & 0x01;
+    result |= cpu.m_flag_c << 8;
+    cpu.m_flag_c = result & 0x01;
     
     return result >> 1;
 }
 
 // return from interrut
-void Cpu::instr_rti() {
-    uint8_t ps = stack_pull();
-    uint16_t pc = stack_pull();
-    pc |= stack_pull() << 8;
-    m_pc = pc;
+void Cpu::instr_rti(Cpu cpu) {
+    uint8_t ps = cpu.stack_pull();
+    uint16_t pc = cpu.stack_pull();
+    pc |= cpu.stack_pull() << 8;
+    cpu.m_pc = pc;
 
-    m_flag_n = ps & 0x80;
-    m_flag_v = ps & 0x40;
-    m_flag_d = ps & 0x08;
-    m_flag_i = ps & 0x04;
-    m_flag_z = ps & 0x02;
-    m_flag_c = ps & 0x01;
+    cpu.m_flag_n = ps & 0x80;
+    cpu.m_flag_v = ps & 0x40;
+    cpu.m_flag_d = ps & 0x08;
+    cpu.m_flag_i = ps & 0x04;
+    cpu.m_flag_z = ps & 0x02;
+    cpu.m_flag_c = ps & 0x01;
 }
 
 // return from subroutine
-void Cpu::instr_rts() {
-    uint16_t pc = stack_pull();
-    pc |= stack_pull() << 8;
-    m_pc = pc + 1;
+void Cpu::instr_rts(Cpu cpu) {
+    uint16_t pc = cpu.stack_pull();
+    pc |= cpu.stack_pull() << 8;
+    cpu.m_pc = pc + 1;
 }
 
 // subtract with carry
-void Cpu::instr_sbc(uint8_t arg) {
-    uint16_t result = m_a - arg - !m_flag_c;
+void Cpu::instr_sbc(Cpu cpu, uint8_t arg) {
+    uint16_t result = cpu.m_a - arg - !cpu.m_flag_c;
 
-    m_flag_c = ~(result > 0xFF);
-    m_flag_z = result == 0;
-    m_flag_v = (result ^ m_a) & (result ^ ~arg) & 0x80;
+    cpu.m_flag_c = ~(result > 0xFF);
+    cpu.m_flag_z = result == 0;
+    cpu.m_flag_v = (result ^ cpu.m_a) & (result ^ ~arg) & 0x80;
 }
 
 // set carry
-void Cpu::instr_sec() {
-    m_flag_c = true;
+void Cpu::instr_sec(Cpu cpu) {
+    cpu.m_flag_c = true;
 }
 
 // set decimal
-void Cpu::instr_sed() {
-    m_flag_d = true;
+void Cpu::instr_sed(Cpu cpu) {
+    cpu.m_flag_d = true;
 }
 
 // set interrupt disable
-void Cpu::instr_sei() {
-    m_flag_i = true;
+void Cpu::instr_sei(Cpu cpu) {
+    cpu.m_flag_i = true;
 }
 
 // store A
-uint8_t Cpu::instr_sta() {
-    return m_a;
+uint8_t Cpu::instr_sta(Cpu cpu) {
+    return cpu.m_a;
 }
 
 // store X
-uint8_t Cpu::instr_stx() {
-    return m_x;
+uint8_t Cpu::instr_stx(Cpu cpu) {
+    return cpu.m_x;
 }
 
 // store Y
-uint8_t Cpu::instr_sty() {
-    return m_y;
+uint8_t Cpu::instr_sty(Cpu cpu) {
+    return cpu.m_y;
 }
 
 // transfer A to X
-void Cpu::instr_tax() {
-    m_x = m_a;
+void Cpu::instr_tax(Cpu cpu) {
+    cpu.m_x = cpu.m_a;
 }
 
 // transfer A to Y
-void Cpu::instr_tay() {
-    m_y = m_a;
+void Cpu::instr_tay(Cpu cpu) {
+    cpu.m_y = cpu.m_a;
 }
 
 // transfer stack pointer to X
-void Cpu::instr_tsx() {
-    m_x = m_s;
+void Cpu::instr_tsx(Cpu cpu) {
+    cpu.m_x = cpu.m_s;
 }
 
 // transfer X to A
-void Cpu::instr_txa() {
-    m_a = m_x;
+void Cpu::instr_txa(Cpu cpu) {
+    cpu.m_a = cpu.m_x;
 }
 
 // tranfer X to stack pointer
-void Cpu::instr_txs() {
-    m_s = m_x;
+void Cpu::instr_txs(Cpu cpu) {
+    cpu.m_s = cpu.m_x;
 }
 
 // transfer Y to A
-void Cpu::instr_tya() {
-    m_a = m_y;
+void Cpu::instr_tya(Cpu cpu) {
+    cpu.m_a = cpu.m_y;
 }

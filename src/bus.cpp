@@ -1,5 +1,13 @@
 #include "bus.h"
 
+Bus::Bus() {
+
+}
+
+Bus::~Bus() {
+
+}
+
 uint16_t Bus::read_address() { return m_address; }
 uint8_t Bus::read_data() { return m_data; }
 uint8_t Bus::read_data(uint16_t address) {
