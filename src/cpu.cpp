@@ -184,7 +184,7 @@ void Cpu::stack_push(uint8_t data) {
 
 // pulls a byte from the stack
 uint8_t Cpu::stack_pull() {
-    m_bus.read_data(0x0100 + ++m_s);
+    return m_bus.read_data(0x0100 + ++m_s);
 }
 
 // immidiate addressing mode wrapper for read instruction
@@ -197,7 +197,7 @@ std::function<void(Cpu &)> Cpu::addr_mode_r_im(std::function<void(Cpu &, uint8_t
 // zero page addressing mode wrapper for read instruction
 std::function<void(Cpu &)> Cpu::addr_mode_r_d(std::function<void(Cpu &, uint8_t)> instr) {
     return [&](Cpu &cpu) -> void {
-        auto addr = cpu.m_bus.read_data(cpu.m_pc++);
+        uint8_t addr = cpu.m_bus.read_data(cpu.m_pc++);
         instr(cpu, cpu.m_bus.read_data(addr));
     };
 }
