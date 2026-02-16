@@ -181,7 +181,7 @@ void Cpu::ir_fetch() {
 
 // pushes a byte to the stack
 void Cpu::stack_push(uint8_t data) {
-    m_bus.write_data(0x0100 + m_s--);
+    m_bus.write_data(0x0100 + m_s--, data);
 }
 
 // pulls a byte from the stack
@@ -290,7 +290,7 @@ std::function<void(Cpu &)> Cpu::addr_mode_rmw_d(std::function<uint8_t(Cpu &, uin
     return [&](Cpu cpu) -> void {
         uint8_t addr = cpu.m_bus.read_data(cpu.m_pc++);
         uint8_t result = instr(cpu, cpu.m_bus.read_data(addr));
-        cpu.m_bus.write_data(result);
+        cpu.m_bus.write_data(addr, result);
     };
 };
 
@@ -300,7 +300,7 @@ std::function<void(Cpu &)> Cpu::addr_mode_rmw_a(std::function<uint8_t(Cpu &, uin
         uint16_t addr = cpu.m_bus.read_data(cpu.m_pc++);
         addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
         uint8_t result = instr(cpu, cpu.m_bus.read_data(addr));
-        cpu.m_bus.write_data(result);
+        cpu.m_bus.write_data(addr, result);
     };
 };
 
@@ -310,7 +310,7 @@ std::function<void(Cpu &)> Cpu::addr_mode_rmw_dx(std::function<uint8_t(Cpu &, ui
         uint8_t addr = cpu.m_bus.read_data(cpu.m_pc++);
         addr += cpu.m_x;
         uint8_t result = instr(cpu, cpu.m_bus.read_data(addr));
-        cpu.m_bus.write_data(result);
+        cpu.m_bus.write_data(addr, result);
     };
 };
 
@@ -321,7 +321,7 @@ std::function<void(Cpu &)> Cpu::addr_mode_rmw_ax(std::function<uint8_t(Cpu &, ui
         addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
         addr += cpu.m_x;
         uint8_t result = instr(cpu, cpu.m_bus.read_data(addr));
-        cpu.m_bus.write_data(result);
+        cpu.m_bus.write_data(addr, result);
     };
 };
 

@@ -1,9 +1,10 @@
 #pragma once
+
 #include <cstdint>
 #include <functional>
 #include <map>
 
-#include "bus.h"
+class Bus;
 
 /*
  * Representation of the NES CPU, RP2A03, a modified version of the 6502.

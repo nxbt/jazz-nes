@@ -6,8 +6,15 @@ include(CTest)
 set(INC ${PROJECT_SOURCE_DIR}/include)
 set(SRC ${PROJECT_SOURCE_DIR}/src)
 
-set(INC_FILES ${INC}/bus.h ${INC}/cpu.h)
-set(SRC_FILES ${SRC}/bus.cpp ${SRC}/cpu.cpp)
+set(INC_FILES 
+    ${INC}/bus.h 
+    ${INC}/cpu.h
+    ${INC}/bus_component.h
+)
+set(SRC_FILES
+    ${SRC}/bus.cpp
+    ${SRC}/cpu.cpp
+)
 
 add_executable(jazz_nes ${SRC}/main.cpp ${INC_FILES} ${SRC_FILES})
 target_include_directories(jazz_nes PRIVATE ${INC} ${SRC})
