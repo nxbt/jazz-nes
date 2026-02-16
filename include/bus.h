@@ -18,8 +18,8 @@ public:
 
     void add_component(BusComponent& component, uint16_t start_addr);
 
-    uint8_t read_data(uint16_t address);
-    void write_data(uint16_t address, uint8_t data);
+    uint8_t read_data(uint16_t addr);
+    void write_data(uint16_t addr, uint8_t data);
 
 private:
 

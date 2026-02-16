@@ -329,7 +329,7 @@ std::function<void(Cpu &)> Cpu::addr_mode_rmw_ax(std::function<uint8_t(Cpu &, ui
 std::function<void(Cpu &)> Cpu::addr_mode_w_d(std::function<uint8_t(Cpu &)> instr) {
     return [&](Cpu cpu) -> void {
         uint8_t addr = cpu.m_bus.read_data(cpu.m_pc++);
-        cpu.m_bus.write_data(instr(cpu), addr);
+        cpu.m_bus.write_data(addr, instr(cpu));
     };
 }
 
@@ -338,7 +338,7 @@ std::function<void(Cpu &)> Cpu::addr_mode_w_a(std::function<uint8_t(Cpu &)> inst
     return [&](Cpu cpu) -> void {
         uint16_t addr = cpu.m_bus.read_data(cpu.m_pc++);
         addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
-        cpu.m_bus.write_data(instr(cpu), addr);
+        cpu.m_bus.write_data(addr, instr(cpu));
     };
 }
 
@@ -347,7 +347,7 @@ std::function<void(Cpu &)> Cpu::addr_mode_w_dx(std::function<uint8_t(Cpu &)> ins
     return [&](Cpu cpu) -> void {
         uint8_t addr = cpu.m_bus.read_data(cpu.m_pc++);
         addr += cpu.m_x;
-        cpu.m_bus.write_data(instr(cpu), addr);
+        cpu.m_bus.write_data(addr, instr(cpu));
     };
 }
 
@@ -356,7 +356,7 @@ std::function<void(Cpu &)> Cpu::addr_mode_w_dy(std::function<uint8_t(Cpu &)> ins
     return [&](Cpu cpu) -> void {
         uint8_t addr = cpu.m_bus.read_data(cpu.m_pc++);
         addr += cpu.m_y;
-        cpu.m_bus.write_data(instr(cpu), addr);
+        cpu.m_bus.write_data(addr, instr(cpu));
     };
 }
 
@@ -366,7 +366,7 @@ std::function<void(Cpu &)> Cpu::addr_mode_w_ax(std::function<uint8_t(Cpu &)> ins
         uint16_t addr = cpu.m_bus.read_data(cpu.m_pc++);
         addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
         addr += cpu.m_x;
-        cpu.m_bus.write_data(instr(cpu), addr);
+        cpu.m_bus.write_data(addr, instr(cpu));
     };
 }
 
@@ -376,7 +376,7 @@ std::function<void(Cpu &)> Cpu::addr_mode_w_ay(std::function<uint8_t(Cpu &)> ins
         uint16_t addr = cpu.m_bus.read_data(cpu.m_pc++);
         addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
         addr += cpu.m_y;
-        cpu.m_bus.write_data(instr(cpu), addr);
+        cpu.m_bus.write_data(addr, instr(cpu));
     };
 }
 
