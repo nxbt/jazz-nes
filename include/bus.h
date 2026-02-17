@@ -8,8 +8,7 @@ class Cpu;
 
 class Bus {
 public:
-    Bus();
-    ~Bus();
+    static Bus& instance();
 
     uint16_t m_address;
     uint8_t m_data;
@@ -21,6 +20,9 @@ public:
     uint8_t read_data(uint16_t addr);
     void write_data(uint16_t addr, uint8_t data);
 
-private:
+    Bus(Bus const&) = delete;
+    void operator=(Bus const&) = delete;
 
+private:
+    Bus();
 };
