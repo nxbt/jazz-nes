@@ -1,6 +1,7 @@
 #include "file_reader.h"
 
 #include <iostream>
+#include <span>
 
 FileReader::FileReader() {}
 
@@ -24,6 +25,26 @@ FileReader::FileReader(std::string file_path) {
     ) {
         error_file_type(file_path);
     }
+}
+
+std::vector<uint8_t> FileReader::get_prg_rom() {
+    int offset = 16;
+    if(get_trainer_present()) { offset += 512; }
+
+    return std::vector(
+        m_buffer.begin() + offset,
+        m_buffer.begin() + offset + get_prg_rom_size()
+    );
+}
+
+std::vector<uint8_t> FileReader::get_chr_rom() {
+    int offset = 16 + get_prg_rom_size();
+    if(get_trainer_present()) { offset += 512; }
+
+    return std::vector(
+        m_buffer.begin() + offset,
+        m_buffer.begin() + offset + get_chr_rom_size()
+    );
 }
 
 uint8_t FileReader::get_prg_rom_size() {
