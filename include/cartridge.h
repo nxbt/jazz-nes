@@ -13,20 +13,31 @@ class BusComponent;
 
 class Cartridge {
 public:
-    Cartridge(std::string);
+    Cartridge() = delete;
+    Cartridge(std::string file_path);
+    ~Cartridge();
 
     void connect_cartridge();
 
+    uint8_t m_prg_rom_size;
+    uint8_t m_prg_ram_size;
+    uint8_t m_chr_rom_size;
+
+    uint8_t m_mapper;
+
+    bool m_flag_nametable_arrangement;
+    bool m_flag_alt_nametable_arrangement;
+    bool m_flag_presistent_memory;
+    bool m_flag_trainer_present;
+    bool m_flag_vs_unisystem;
+    bool m_flag_playchoice;
+    bool m_flag_nes_2;
+
 private:
     std::ifstream m_ifstream;
-    std::vector<BusComponent> m_components;
-
-    void read_file(std::string file_path);
+    std::vector<BusComponent*> m_components;
 
     static std::map<uint8_t, std::function<void(Cartridge&)>> ines_mappers;
-
-    static void error_open(std::string file_path);
-    static void error_file_type(std::string file_path);
 
     static void setup_nrom(Cartridge&);
 };

@@ -1,54 +1,49 @@
 #include "cartridge.h"
 
+#include "file_reader.h"
+#include "rom.h"
+#include "ram.h"
+#include "bus.h"
+
 #include <iostream>
 
 Cartridge::Cartridge(std::string file_path) {
-    read_file(file_path);
+    FileReader file_reader(file_path);
+
+    m_prg_rom_size = file_reader.get_prg_rom_size();
+    m_prg_ram_size = file_reader.get_prg_ram_size();
+    m_chr_rom_size = file_reader.get_chr_rom_size();
+
+    m_mapper = file_reader.get_mapper();
+
+    m_flag_nametable_arrangement = file_reader.get_nametable_arrangement();
+    m_flag_alt_nametable_arrangement = file_reader.get_alt_nametable_arrangement();
+    m_flag_presistent_memory = file_reader.get_presistent_memory();
+    m_flag_trainer_present = file_reader.get_trainer_present();
+    m_flag_vs_unisystem = file_reader.get_vs_unisystem();
+    m_flag_playchoice = file_reader.get_playchoice();
+    m_flag_nes_2 = file_reader.get_nes_2();
+
+    ines_mappers[m_mapper](*this);
+}
+
+Cartridge::~Cartridge() {
+    for(auto component : m_components) {
+        delete component;
+    }
 }
 
 std::map<uint8_t, std::function<void(Cartridge&)>> Cartridge::ines_mappers = {
     {0x00, setup_nrom},
 };
 
-void Cartridge::read_file(std::string file_path) {
-    m_ifstream.exceptions(std::ios_base::failbit);
+void Cartridge::setup_nrom(Cartridge& cartridge) {
+    cartridge.m_prg_ram_size = 0x0800;
 
-    try {
-        m_ifstream.open(file_path);
-    }
-    catch(const std::ios_base::failure& e) {
-        error_open(file_path);
-    }
+    Rom* prg_rom_ptr = new Rom(cartridge.m_prg_rom_size);
+    Ram* prg_ram_ptr = new Ram(cartridge.m_prg_ram_size);
 
-    uint8_t header[16];
-
-    try {
-        m_ifstream.read(reinterpret_cast<char*>(&header), sizeof(header));
-    }
-    catch(const std::ios_base::failure& e) {
-        error_file_type(file_path);
-    }
-
-    if( // assert file starts with "NES<EOF>"
-        header[0] != 0x4E || 
-        header[1] != 0x45 ||
-        header[2] != 0x53 ||
-        header[3] != 0x1A
-    ) {
-        error_file_type(file_path);
-    }
-    
+    cartridge.m_components.push_back(prg_rom_ptr);
+    cartridge.m_components.push_back(prg_ram_ptr);
 
 }
-
-void Cartridge::error_open(std::string file_path) {
-    std::cerr << "failed to open \"" << file_path << "\"\n";
-    std::exit(EXIT_FAILURE);
-}
-
-void Cartridge::error_file_type(std::string file_path) {
-    std::cerr << "\"" << file_path << "\" is not an iNES file\n";
-    std::exit(EXIT_FAILURE);
-}
-
-void setup_nrom(Cartridge& cartridge) {}

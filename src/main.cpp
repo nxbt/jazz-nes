@@ -3,18 +3,10 @@
 
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <cstdint>
+#include <iomanip>
 
 int main() {
-    std::ifstream file;
-    std::cout << file.exceptions() << "\n";
-    file.exceptions(std::ios_base::failbit);
-    try {
-        file.open("fake.lol");
-    }
-    catch(const std::exception& e) {
-        std::cerr << e.what() << "\n";
-        std::exit(EXIT_FAILURE);
-    }
-
     return 0;
 }
