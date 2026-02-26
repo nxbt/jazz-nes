@@ -2,6 +2,8 @@
 
 #include "rom.h"
 
+#include "file_reader.h"
+
 #include <cstdint>
 #include <string>
 #include <fstream>
@@ -10,7 +12,6 @@
 #include <functional>
 
 class BusComponent;
-class FileReader;
 
 class Cartridge {
 public:
@@ -21,20 +22,6 @@ public:
     void connect_cartridge();
 
     FileReader m_file_reader;
-
-    // uint8_t m_prg_rom_size;
-    // uint8_t m_prg_ram_size;
-    // uint8_t m_chr_rom_size;
-
-    // uint8_t m_mapper;
-
-    // bool m_flag_nametable_arrangement;
-    // bool m_flag_alt_nametable_arrangement;
-    // bool m_flag_presistent_memory;
-    // bool m_flag_trainer_present;
-    // bool m_flag_vs_unisystem;
-    // bool m_flag_playchoice;
-    // bool m_flag_nes_2;
 
 private:
     std::ifstream m_ifstream;

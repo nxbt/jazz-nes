@@ -8,22 +8,6 @@
 #include <iostream>
 
 Cartridge::Cartridge(std::string file_path): m_file_reader(file_path) {
-    // FileReader file_reader(file_path);
-
-    // m_prg_rom_size = file_reader.get_prg_rom_size();
-    // m_prg_ram_size = file_reader.get_prg_ram_size();
-    // m_chr_rom_size = file_reader.get_chr_rom_size();
-
-    // m_mapper = file_reader.get_mapper();
-
-    // m_flag_nametable_arrangement = file_reader.get_nametable_arrangement();
-    // m_flag_alt_nametable_arrangement = file_reader.get_alt_nametable_arrangement();
-    // m_flag_presistent_memory = file_reader.get_presistent_memory();
-    // m_flag_trainer_present = file_reader.get_trainer_present();
-    // m_flag_vs_unisystem = file_reader.get_vs_unisystem();
-    // m_flag_playchoice = file_reader.get_playchoice();
-    // m_flag_nes_2 = file_reader.get_nes_2();
-
     ines_mappers[m_file_reader.get_mapper()](*this);
 }
 
@@ -55,7 +39,7 @@ void Cartridge::setup_nrom(Cartridge& cartridge) {
         Bus::instance().add_component(*prg_ram_ptr, addr);
     }
 
-    for(int addr = 0x8000; addr < 0xBFFF; addr += prg_rom_size) {
+    for(int addr = 0x8000; addr < 0xFFFF; addr += prg_rom_size) {
         Bus::instance().add_component(*prg_rom_ptr, addr);
     }
 }

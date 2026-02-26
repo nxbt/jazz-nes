@@ -17,9 +17,9 @@ public:
     std::vector<uint8_t> get_prg_rom();
     std::vector<uint8_t> get_chr_rom();
 
-    uint8_t get_prg_rom_size();
-    uint8_t get_prg_ram_size();
-    uint8_t get_chr_rom_size();
+    int get_prg_rom_size();
+    int get_prg_ram_size();
+    int get_chr_rom_size();
 
     uint8_t get_mapper();
 

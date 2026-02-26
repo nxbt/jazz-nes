@@ -3,8 +3,6 @@
 #include <iostream>
 #include <span>
 
-FileReader::FileReader() {}
-
 FileReader::FileReader(std::string file_path) {
     std::ifstream stream(file_path, std::ios_base::binary);
 
@@ -47,21 +45,21 @@ std::vector<uint8_t> FileReader::get_chr_rom() {
     );
 }
 
-uint8_t FileReader::get_prg_rom_size() {
-    return m_buffer[4] * 16384;
+int FileReader::get_prg_rom_size() {
+    return m_buffer[4] * 0x4000;
 }
 
-uint8_t FileReader::get_prg_ram_size() {
-    if(m_buffer[8] == 0) return 8192;
-    return m_buffer[8] * 8192;
+int FileReader::get_prg_ram_size() {
+    if(m_buffer[8] == 0) return 0x2000;
+    return m_buffer[8] * 0x2000;
 }
 
-uint8_t FileReader::get_chr_rom_size() {
-    return m_buffer[5] * 8192;
+int FileReader::get_chr_rom_size() {
+    return m_buffer[5] * 0x2000;
 }
 
 uint8_t FileReader::get_mapper() {
-    return (m_buffer[6] > 4) | (m_buffer[7] & 0xF0);
+    return (m_buffer[6] >> 4) | (m_buffer[7] & 0xF0);
 }
 
 bool FileReader::get_nametable_arrangement() {

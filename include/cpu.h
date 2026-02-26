@@ -56,7 +56,9 @@ private:
     static std::function<void(Cpu&)> addr_mode_r_ay(std::function<void(Cpu&, uint8_t)> instr);
     static std::function<void(Cpu&)> addr_mode_r_ix(std::function<void(Cpu&, uint8_t)> instr);
     static std::function<void(Cpu&)> addr_mode_r_iy(std::function<void(Cpu&, uint8_t)> instr);
-    static std::function<void(Cpu&)> addr_mode_r_i(std::function<void(Cpu&, uint8_t)> instr);
+
+    static std::function<void(Cpu&)> addr_mode_j_a(std::function<void(Cpu&, uint16_t)> instr);
+    static std::function<void(Cpu&)> addr_mode_j_i(std::function<void(Cpu&, uint16_t)> instr);
 
     static std::function<void(Cpu&)> addr_mode_w_d(std::function<uint8_t(Cpu&)> instr);
     static std::function<void(Cpu&)> addr_mode_w_a(std::function<uint8_t(Cpu&)> instr);
@@ -101,8 +103,8 @@ private:
     static uint8_t instr_inc(Cpu& cpu, uint8_t arg);
     static void instr_inx(Cpu& cpu);
     static void instr_iny(Cpu& cpu);
-    static void instr_jmp(Cpu& cpu, uint8_t arg);
-    static void instr_jsr(Cpu& cpu, uint8_t arg);
+    static void instr_jmp(Cpu& cpu, uint16_t arg);
+    static void instr_jsr(Cpu& cpu, uint16_t arg);
     static void instr_lda(Cpu& cpu, uint8_t arg);
     static void instr_ldx(Cpu& cpu, uint8_t arg);
     static void instr_ldy(Cpu& cpu, uint8_t arg);
