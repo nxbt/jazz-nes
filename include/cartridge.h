@@ -12,6 +12,7 @@
 #include <functional>
 
 class BusComponent;
+class Nes;
 
 class Cartridge {
 public:
@@ -19,7 +20,7 @@ public:
     Cartridge(std::string file_path);
     ~Cartridge();
 
-    void connect_cartridge();
+    void connect(Nes& nes);
 
     FileReader m_file_reader;
 
@@ -29,7 +30,7 @@ private:
 
     BusComponent* add_component(BusComponent* component_ptr);
 
-    static std::map<uint8_t, std::function<void(Cartridge&)>> ines_mappers;
+    static std::map<uint8_t, std::function<void(Cartridge&, Nes&)>> ines_mappers;
 
-    static void setup_nrom(Cartridge&);
+    static void setup_nrom(Cartridge&, Nes&);
 };

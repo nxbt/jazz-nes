@@ -4,11 +4,10 @@
 #include <map>
 
 class BusComponent;
-class Cpu;
 
 class Bus {
 public:
-    static Bus& instance();
+    Bus();
 
     uint16_t m_address;
     uint8_t m_data;
@@ -24,5 +23,4 @@ public:
     void operator=(Bus const&) = delete;
 
 private:
-    Bus();
 };

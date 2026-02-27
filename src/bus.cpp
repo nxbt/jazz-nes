@@ -6,11 +6,6 @@
 
 Bus::Bus() {}
 
-Bus& Bus::instance() {
-    static Bus instance;
-    return instance;
-}
-
 void Bus::add_component(BusComponent& component, uint16_t start_addr) {
     m_components.insert({start_addr, component});
 }

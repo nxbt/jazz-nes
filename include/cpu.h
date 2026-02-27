@@ -1,5 +1,7 @@
 #pragma once
 
+#include "bus_driver.h"
+
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -13,9 +15,9 @@ class Bus;
  * hardware components is achieved by tracking how many CPU cycles have been
  * processed ahead of schedule and delaying the IR fetch accordingly.
  */
-class Cpu {
+class Cpu : public BusDriver {
 public:
-    static Cpu& instance();
+    Cpu();
 
     void tick();
 
@@ -23,10 +25,6 @@ public:
     void operator=(Cpu const&) = delete;
 
 private:
-    Cpu();
-
-    Bus& m_bus;
-
     // program counter
     uint16_t m_pc;
 

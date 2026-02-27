@@ -162,14 +162,7 @@ std::map<uint8_t, std::function<void(Cpu&)>> Cpu::instr_map = {
     {0x98, instr_tya},
 };
 
-Cpu::Cpu(): m_bus(Bus::instance()) {
-    m_pc = 0xC000;
-}
-
-Cpu& Cpu::instance() {
-    static Cpu instance;
-    return instance;
-}
+Cpu::Cpu() {}
 
 void Cpu::tick() {
     if(m_clock_lead > 0) {
@@ -181,7 +174,7 @@ void Cpu::tick() {
 
 // fetches and executes next instruction from program counter (PC)
 void Cpu::ir_fetch() {
-    uint16_t ir = m_bus.read_data(m_pc++);
+    uint16_t ir = bus().read_data(m_pc++);
     
     try {
         instr_map[ir](*this);
@@ -194,53 +187,53 @@ void Cpu::ir_fetch() {
 
 // pushes a byte to the stack
 void Cpu::stack_push(uint8_t data) {
-    m_bus.write_data(0x0100 + m_s--, data);
+    bus().write_data(0x0100 + m_s--, data);
 }
 
 // pulls a byte from the stack
 uint8_t Cpu::stack_pull() {
-    return m_bus.read_data(0x0100 + ++m_s);
+    return bus().read_data(0x0100 + ++m_s);
 }
 
 // immidiate addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_im(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
-        instr(cpu, cpu.m_bus.read_data(cpu.m_pc++));
+        instr(cpu, cpu.bus().read_data(cpu.m_pc++));
     };
 }
 
 // zero page addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_d(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint8_t addr = cpu.m_bus.read_data(cpu.m_pc++);
-        instr(cpu, cpu.m_bus.read_data(addr));
+        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
+        instr(cpu, cpu.bus().read_data(addr));
     };
 }
 
 // absolute addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_a(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint16_t addr = cpu.m_bus.read_data(cpu.m_pc++);
-        addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
-        instr(cpu, cpu.m_bus.read_data(addr));
+        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
+        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        instr(cpu, cpu.bus().read_data(addr));
     };
 }
 
 // zero page x indexed addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_dx(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint8_t addr = cpu.m_bus.read_data(cpu.m_pc++);
+        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr += cpu.m_x;
-        instr(cpu, cpu.m_bus.read_data(addr));
+        instr(cpu, cpu.bus().read_data(addr));
     };
 }
 
 // zero page y indexed addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_dy(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint8_t addr = cpu.m_bus.read_data(cpu.m_pc++);
+        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr += cpu.m_y;
-        instr(cpu, cpu.m_bus.read_data(addr));
+        instr(cpu, cpu.bus().read_data(addr));
     };
 }
 
@@ -248,20 +241,20 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_dy(std::function<void(Cpu&, uint8_t)>
 // absolute x indexed addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_ax(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint16_t addr = cpu.m_bus.read_data(cpu.m_pc++);
-        addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
+        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
         addr += cpu.m_x;
-        instr(cpu, cpu.m_bus.read_data(addr));
+        instr(cpu, cpu.bus().read_data(addr));
     };
 }
 
 // absolute y indexed addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_ay(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint16_t addr = cpu.m_bus.read_data(cpu.m_pc++);
-        addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
+        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
         addr += cpu.m_y;
-        instr(cpu, cpu.m_bus.read_data(addr));
+        instr(cpu, cpu.bus().read_data(addr));
     };
 }
 
@@ -290,95 +283,95 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_ac(std::function<uint8_t(Cpu&, uint
 // zero page addressing mode wrapper for read-modify-write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_rmw_d(std::function<uint8_t(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint8_t addr = cpu.m_bus.read_data(cpu.m_pc++);
-        uint8_t result = instr(cpu, cpu.m_bus.read_data(addr));
-        cpu.m_bus.write_data(addr, result);
+        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
+        uint8_t result = instr(cpu, cpu.bus().read_data(addr));
+        cpu.bus().write_data(addr, result);
     };
 };
 
 // absolute addressing mode wrapper for read-modify-write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_rmw_a(std::function<uint8_t(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint16_t addr = cpu.m_bus.read_data(cpu.m_pc++);
-        addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
-        uint8_t result = instr(cpu, cpu.m_bus.read_data(addr));
-        cpu.m_bus.write_data(addr, result);
+        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
+        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        uint8_t result = instr(cpu, cpu.bus().read_data(addr));
+        cpu.bus().write_data(addr, result);
     };
 };
 
 // zero page x indexed addressing mode wrapper for read-modify-write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_rmw_dx(std::function<uint8_t(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint8_t addr = cpu.m_bus.read_data(cpu.m_pc++);
+        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr += cpu.m_x;
-        uint8_t result = instr(cpu, cpu.m_bus.read_data(addr));
-        cpu.m_bus.write_data(addr, result);
+        uint8_t result = instr(cpu, cpu.bus().read_data(addr));
+        cpu.bus().write_data(addr, result);
     };
 };
 
 // absolute x indexed addressing mode wrapper for read-modify-write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_rmw_ax(std::function<uint8_t(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint16_t addr = cpu.m_bus.read_data(cpu.m_pc++);
-        addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
+        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
         addr += cpu.m_x;
-        uint8_t result = instr(cpu, cpu.m_bus.read_data(addr));
-        cpu.m_bus.write_data(addr, result);
+        uint8_t result = instr(cpu, cpu.bus().read_data(addr));
+        cpu.bus().write_data(addr, result);
     };
 };
 
 // zero page addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_d(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint8_t addr = cpu.m_bus.read_data(cpu.m_pc++);
-        cpu.m_bus.write_data(addr, instr(cpu));
+        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
+        cpu.bus().write_data(addr, instr(cpu));
     };
 }
 
 // absolute addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_a(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint16_t addr = cpu.m_bus.read_data(cpu.m_pc++);
-        addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
-        cpu.m_bus.write_data(addr, instr(cpu));
+        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
+        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        cpu.bus().write_data(addr, instr(cpu));
     };
 }
 
 // zero page x indexed addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_dx(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint8_t addr = cpu.m_bus.read_data(cpu.m_pc++);
+        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr += cpu.m_x;
-        cpu.m_bus.write_data(addr, instr(cpu));
+        cpu.bus().write_data(addr, instr(cpu));
     };
 }
 
 // zero page y indexed addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_dy(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint8_t addr = cpu.m_bus.read_data(cpu.m_pc++);
+        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr += cpu.m_y;
-        cpu.m_bus.write_data(addr, instr(cpu));
+        cpu.bus().write_data(addr, instr(cpu));
     };
 }
 
 // absolute x indexed addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_ax(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint16_t addr = cpu.m_bus.read_data(cpu.m_pc++);
-        addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
+        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
         addr += cpu.m_x;
-        cpu.m_bus.write_data(addr, instr(cpu));
+        cpu.bus().write_data(addr, instr(cpu));
     };
 }
 
 // absolute y indexed addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_ay(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint16_t addr = cpu.m_bus.read_data(cpu.m_pc++);
-        addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
+        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
         addr += cpu.m_y;
-        cpu.m_bus.write_data(addr, instr(cpu));
+        cpu.bus().write_data(addr, instr(cpu));
     };
 }
 
@@ -399,8 +392,8 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_iy(std::function<uint8_t(Cpu&)> instr
 // absolute addressing mode wrapper for jump instructions
 std::function<void(Cpu&)> Cpu::addr_mode_j_a(std::function<void(Cpu&, uint16_t)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint16_t addr = cpu.m_bus.read_data(cpu.m_pc++);
-        addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
+        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
         instr(cpu, addr);
     };
 }
@@ -408,10 +401,10 @@ std::function<void(Cpu&)> Cpu::addr_mode_j_a(std::function<void(Cpu&, uint16_t)>
 // indirect addressing mode wrapper for jump instructions
 std::function<void(Cpu&)> Cpu::addr_mode_j_i(std::function<void(Cpu&, uint16_t)> instr) {
     return [=](Cpu& cpu) -> void {
-        uint16_t ptr_addr = cpu.m_bus.read_data(cpu.m_pc++);
-        ptr_addr |= cpu.m_bus.read_data(cpu.m_pc++) << 8;
-        uint16_t addr = cpu.m_bus.read_data(ptr_addr);
-        addr |= cpu.m_bus.read_data(((ptr_addr + 1) & 0x0F ) | (ptr_addr & 0xF0)) << 8;
+        uint16_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
+        ptr_addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.bus().read_data(ptr_addr);
+        addr |= cpu.bus().read_data(((ptr_addr + 1) & 0x0F ) | (ptr_addr & 0xF0)) << 8;
         instr(cpu, addr);
     };
 }
@@ -450,7 +443,7 @@ uint8_t Cpu::instr_asl(Cpu& cpu, uint8_t arg) {
 
 // branch if carry clear
 void Cpu::instr_bcc(Cpu& cpu) {
-    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
     if(!cpu.m_flag_c) {
         cpu.m_pc += arg;
     }
@@ -458,7 +451,7 @@ void Cpu::instr_bcc(Cpu& cpu) {
 
 // branch if carry set
 void Cpu::instr_bcs(Cpu& cpu) {
-    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
     if(cpu.m_flag_c) {
         cpu.m_pc += arg;
     }
@@ -466,7 +459,7 @@ void Cpu::instr_bcs(Cpu& cpu) {
 
 // branch if equal
 void Cpu::instr_beq(Cpu& cpu) {
-    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
     if(cpu.m_flag_z) {
         cpu.m_pc += arg;
     }
@@ -482,7 +475,7 @@ void Cpu::instr_bit(Cpu& cpu, uint8_t arg) {
 
 // branch if minus
 void Cpu::instr_bmi(Cpu& cpu) {
-    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
     if(cpu.m_flag_n) {
         cpu.m_pc += arg;
     }
@@ -490,7 +483,7 @@ void Cpu::instr_bmi(Cpu& cpu) {
 
 // branch if not equal
 void Cpu::instr_bne(Cpu& cpu) {
-    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
     if(!cpu.m_flag_z) {
         cpu.m_pc += arg;
     }
@@ -498,7 +491,7 @@ void Cpu::instr_bne(Cpu& cpu) {
 
 // branch if plus
 void Cpu::instr_bpl(Cpu& cpu) {
-    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
     if(!cpu.m_flag_n) {
         cpu.m_pc += arg;
     }
@@ -517,7 +510,7 @@ void Cpu::instr_brk(Cpu& cpu) {
 
 // branch if overflow clear
 void Cpu::instr_bvc(Cpu& cpu) {
-    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
     if(!cpu.m_flag_v) {
         cpu.m_pc += arg;
     }
@@ -525,7 +518,7 @@ void Cpu::instr_bvc(Cpu& cpu) {
 
 // branch if overflow set
 void Cpu::instr_bvs(Cpu& cpu) {
-    int8_t arg = cpu.m_bus.read_data(cpu.m_pc++);
+    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
     if(cpu.m_flag_v) {
         cpu.m_pc += arg;
     }
