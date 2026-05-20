@@ -2,6 +2,10 @@
 
 class Bus;
 
+/*
+ * Base class for any component that drives a data/address bus
+ * Generally the CPU or PPU
+ */
 class BusDriver {
 public:
     ~BusDriver();

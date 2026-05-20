@@ -21,6 +21,8 @@ public:
 
     void tick();
 
+    void debug_overwrite_pc(uint16_t);
+
     Cpu(Cpu const&) = delete;
     void operator=(Cpu const&) = delete;
 
@@ -40,8 +42,13 @@ private:
     // maps 8-bit opcodes to functions for each cpu instruction
     static std::map<uint8_t, std::function<void(Cpu&)>> instr_map;
 
+    // fetches and executes next instruction from program counter (PC)
     void ir_fetch();
+
+    // pushes a byte to the stack
     void stack_push(uint8_t data);
+
+    // pulls a byte from the stack
     uint8_t stack_pull();
 
     // addressing modes

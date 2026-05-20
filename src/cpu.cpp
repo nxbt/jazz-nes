@@ -6,6 +6,7 @@
 #include <functional>
 #include <map>
 #include <iostream>
+#include <iomanip>
 
 std::map<uint8_t, std::function<void(Cpu&)>> Cpu::instr_map = {
     {0x69, addr_mode_r_im(instr_adc)},
@@ -160,9 +161,16 @@ std::map<uint8_t, std::function<void(Cpu&)>> Cpu::instr_map = {
     {0x8A, instr_txa},
     {0x9A, instr_txs},
     {0x98, instr_tya},
+
+    // illegal instructions
 };
 
-Cpu::Cpu() {}
+Cpu::Cpu() {
+    m_pc = 0xFFFC;
+    m_s = 0xFD;
+
+    m_flag_i = true;
+}
 
 void Cpu::tick() {
     if(m_clock_lead > 0) {
@@ -172,25 +180,29 @@ void Cpu::tick() {
     ir_fetch();
 }
 
-// fetches and executes next instruction from program counter (PC)
+void Cpu::debug_overwrite_pc(uint16_t data) {
+    std::cerr << "DEBUG: pc overwritten to 0x" << std::hex << std::setw(4) << std::setfill('0') << data << "\n";
+    m_pc = data;
+}
+
 void Cpu::ir_fetch() {
-    uint16_t ir = bus().read_data(m_pc++);
+    uint8_t ir = bus().read_data(m_pc++);
     
     try {
         instr_map[ir](*this);
     }
     catch(std::exception e) {
-        std::cerr << "Unknown instruction 0x" << std::hex << ir << "\n";
-        exit(EXIT_FAILURE);
+        std::cerr << "ERROR: Unknown instruction 0x" << 
+            std::hex << std::setw(2) << std::setfill('0') << +ir <<
+            " at pc 0x" << std::hex << std::setw(4) << std::setfill('0') << m_pc - 1 << "\n";
+        throw;
     }
 }
 
-// pushes a byte to the stack
 void Cpu::stack_push(uint8_t data) {
     bus().write_data(0x0100 + m_s--, data);
 }
 
-// pulls a byte from the stack
 uint8_t Cpu::stack_pull() {
     return bus().read_data(0x0100 + ++m_s);
 }
@@ -261,14 +273,26 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_ay(std::function<void(Cpu&, uint8_t)>
 // indirect x indexed addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_ix(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
+        ptr_addr += cpu.m_x;
 
+        uint16_t addr = cpu.bus().read_data(ptr_addr++);
+        addr |= cpu.bus().read_data(ptr_addr) << 8;
+
+        instr(cpu, cpu.bus().read_data(addr));
     };
 }
 
 // indirect y index addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_iy(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
 
+        uint16_t addr = cpu.bus().read_data(ptr_addr++);
+        addr |= cpu.bus().read_data(ptr_addr);
+        addr += cpu.m_y;
+
+        instr(cpu, cpu.bus().read_data(addr));
     };
 }
 
@@ -378,14 +402,26 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_ay(std::function<uint8_t(Cpu&)> instr
 // indirect x indexed addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_ix(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
+        uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
+        ptr_addr += cpu.m_x;
 
+        uint16_t addr = cpu.bus().read_data(ptr_addr++);
+        addr |= cpu.bus().read_data(ptr_addr) << 8;
+
+        cpu.bus().write_data(addr, instr(cpu));
     };
 }
 
 // indirect y indexed addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_iy(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
+        uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
+    
+        uint16_t addr = cpu.bus().read_data(ptr_addr++);
+        addr |= cpu.bus().read_data(ptr_addr) << 8;
+        addr += cpu.m_y;
 
+        cpu.bus().write_data(addr, instr(cpu));
     };
 }
 
@@ -404,7 +440,7 @@ std::function<void(Cpu&)> Cpu::addr_mode_j_i(std::function<void(Cpu&, uint16_t)>
         uint16_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
         ptr_addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
         uint16_t addr = cpu.bus().read_data(ptr_addr);
-        addr |= cpu.bus().read_data(((ptr_addr + 1) & 0x0F ) | (ptr_addr & 0xF0)) << 8;
+        addr |= cpu.bus().read_data(((ptr_addr + 1) & 0x00FF ) | (ptr_addr & 0xFF00)) << 8;
         instr(cpu, addr);
     };
 }
@@ -613,7 +649,7 @@ void Cpu::instr_jmp(Cpu& cpu, uint16_t arg) {
 
 // jump to subroutine
 void Cpu::instr_jsr(Cpu& cpu, uint16_t arg) {
-    cpu.m_pc++;
+    cpu.m_pc--;
     cpu.stack_push(cpu.m_pc >> 8);
     cpu.stack_push(cpu.m_pc);
     cpu.m_pc = arg;
