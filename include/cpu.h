@@ -78,7 +78,10 @@ private:
     static std::function<void(Cpu&)> addr_mode_rmw_d(std::function<uint8_t(Cpu&, uint8_t)> instr);
     static std::function<void(Cpu&)> addr_mode_rmw_a(std::function<uint8_t(Cpu&, uint8_t)> instr);
     static std::function<void(Cpu&)> addr_mode_rmw_dx(std::function<uint8_t(Cpu&, uint8_t)> instr);
+    static std::function<void(Cpu&)> addr_mode_rmw_ix(std::function<uint8_t(Cpu&, uint8_t)> instr);
+    static std::function<void(Cpu&)> addr_mode_rmw_iy(std::function<uint8_t(Cpu&, uint8_t)> instr);
     static std::function<void(Cpu&)> addr_mode_rmw_ax(std::function<uint8_t(Cpu&, uint8_t)> instr);
+    static std::function<void(Cpu&)> addr_mode_rmw_ay(std::function<uint8_t(Cpu&, uint8_t)> instr);
 
     // instructions
     static void instr_adc(Cpu& cpu, uint8_t arg);
@@ -137,4 +140,26 @@ private:
     static void instr_txa(Cpu& cpu);
     static void instr_txs(Cpu& cpu);
     static void instr_tya(Cpu& cpu);
+
+    // illegal instructions
+    static void instr_il_nop(Cpu& cpu, uint8_t arg);
+    static uint8_t instr_il_slo(Cpu& cpu, uint8_t arg);
+    static uint8_t instr_il_rla(Cpu& cpu, uint8_t arg);
+    static uint8_t instr_il_sre(Cpu& cpu, uint8_t arg);
+    static uint8_t instr_il_rra(Cpu& cpu, uint8_t arg);
+    static uint8_t instr_il_sax(Cpu& cpu);
+    static void instr_il_lax(Cpu& cpu, uint8_t arg);
+    static uint8_t instr_il_dcp(Cpu& cpu, uint8_t arg);
+    static uint8_t instr_il_isc(Cpu& cpu, uint8_t arg);
+    static void instr_il_anc(Cpu& cpu, uint8_t arg);
+    static void instr_il_alr(Cpu& cpu, uint8_t arg);
+    static void instr_il_arr(Cpu& cpu, uint8_t arg);
+    static void instr_il_xaa(Cpu& cpu, uint8_t arg);
+    static void instr_il_axs(Cpu& cpu, uint8_t arg);
+    static void instr_il_sbc(Cpu& cpu, uint8_t arg);
+    static uint8_t instr_il_ahx(Cpu& cpu);
+    static uint8_t instr_il_shx(Cpu& cpu);
+    static uint8_t instr_il_shy(Cpu& cpu);
+    static uint8_t instr_il_tas(Cpu& cpu);
+    static void instr_il_las(Cpu& cpu, uint8_t arg);
 };

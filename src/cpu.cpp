@@ -163,6 +163,100 @@ std::map<uint8_t, std::function<void(Cpu&)>> Cpu::instr_map = {
     {0x98, instr_tya},
 
     // illegal instructions
+    {0x07, addr_mode_rmw_d(instr_il_slo)},
+    {0x17, addr_mode_rmw_dx(instr_il_slo)},
+    {0x03, addr_mode_rmw_ix(instr_il_slo)},
+    {0x13, addr_mode_rmw_iy(instr_il_slo)},
+    {0x0F, addr_mode_rmw_a(instr_il_slo)},
+    {0x1F, addr_mode_rmw_ax(instr_il_slo)},
+    {0x1B, addr_mode_rmw_ay(instr_il_slo)},
+    {0x27, addr_mode_rmw_d(instr_il_rla)},
+    {0x37, addr_mode_rmw_dx(instr_il_rla)},
+    {0x23, addr_mode_rmw_ix(instr_il_rla)},
+    {0x33, addr_mode_rmw_iy(instr_il_rla)},
+    {0x2F, addr_mode_rmw_a(instr_il_rla)},
+    {0x3F, addr_mode_rmw_ax(instr_il_rla)},
+    {0x3B, addr_mode_rmw_ay(instr_il_rla)},
+    {0x47, addr_mode_rmw_d(instr_il_sre)},
+    {0x57, addr_mode_rmw_dx(instr_il_sre)},
+    {0x43, addr_mode_rmw_ix(instr_il_sre)},
+    {0x53, addr_mode_rmw_iy(instr_il_sre)},
+    {0x4F, addr_mode_rmw_a(instr_il_sre)},
+    {0x5F, addr_mode_rmw_ax(instr_il_sre)},
+    {0x5B, addr_mode_rmw_ay(instr_il_sre)},
+    {0x67, addr_mode_rmw_d(instr_il_rra)},
+    {0x77, addr_mode_rmw_dx(instr_il_rra)},
+    {0x63, addr_mode_rmw_ix(instr_il_rra)},
+    {0x73, addr_mode_rmw_iy(instr_il_rra)},
+    {0x6F, addr_mode_rmw_a(instr_il_rra)},
+    {0x7F, addr_mode_rmw_ax(instr_il_rra)},
+    {0x7B, addr_mode_rmw_ay(instr_il_rra)},
+    {0x87, addr_mode_w_d(instr_il_sax)},
+    {0x97, addr_mode_w_dy(instr_il_sax)},
+    {0x83, addr_mode_w_ix(instr_il_sax)},
+    {0x8F, addr_mode_w_a(instr_il_sax)},
+    {0xA7, addr_mode_r_d(instr_il_lax)},
+    {0xB7, addr_mode_r_dy(instr_il_lax)},
+    {0xA3, addr_mode_r_ix(instr_il_lax)},
+    {0xB3, addr_mode_r_iy(instr_il_lax)},
+    {0xAF, addr_mode_r_a(instr_il_lax)},
+    {0xBF, addr_mode_r_ay(instr_il_lax)},
+    {0xC7, addr_mode_rmw_d(instr_il_dcp)},
+    {0xD7, addr_mode_rmw_dx(instr_il_dcp)},
+    {0xC3, addr_mode_rmw_ix(instr_il_dcp)},
+    {0xD3, addr_mode_rmw_iy(instr_il_dcp)},
+    {0xCF, addr_mode_rmw_a(instr_il_dcp)},
+    {0xDF, addr_mode_rmw_ax(instr_il_dcp)},
+    {0xDB, addr_mode_rmw_ay(instr_il_dcp)},
+    {0xE7, addr_mode_rmw_d(instr_il_isc)},
+    {0xF7, addr_mode_rmw_dx(instr_il_isc)},
+    {0xE3, addr_mode_rmw_ix(instr_il_isc)},
+    {0xF3, addr_mode_rmw_iy(instr_il_isc)},
+    {0xEF, addr_mode_rmw_a(instr_il_isc)},
+    {0xEF, addr_mode_rmw_a(instr_il_isc)},
+    {0xFF, addr_mode_rmw_ax(instr_il_isc)},
+    {0xFB, addr_mode_rmw_ay(instr_il_isc)},
+    {0x0B, addr_mode_r_im(instr_il_anc)},
+    {0x2B, addr_mode_r_im(instr_il_anc)},
+    {0x4B, addr_mode_r_im(instr_il_alr)},
+    {0x6B, addr_mode_r_im(instr_il_arr)},
+    {0x8B, addr_mode_r_im(instr_il_xaa)},
+    {0xAB, addr_mode_r_im(instr_il_lax)},
+    {0xCB, addr_mode_r_im(instr_il_axs)},
+    {0xEB, addr_mode_r_im(instr_il_sbc)},
+    {0x93, addr_mode_w_iy(instr_il_ahx)},
+    {0x9F, addr_mode_w_ay(instr_il_ahx)},
+    {0x9C, addr_mode_w_ax(instr_il_shy)},
+    {0x9E, addr_mode_w_ay(instr_il_shx)},
+    {0x9B, addr_mode_w_ay(instr_il_tas)},
+    {0xBB, addr_mode_r_ay(instr_il_las)},
+    {0x04, addr_mode_r_d(instr_il_nop)},
+    {0x44, addr_mode_r_d(instr_il_nop)},
+    {0x64, addr_mode_r_d(instr_il_nop)},
+    {0x80, addr_mode_r_im(instr_il_nop)},
+    {0x0C, addr_mode_r_a(instr_il_nop)},
+    {0x14, addr_mode_r_dx(instr_il_nop)},
+    {0x34, addr_mode_r_dx(instr_il_nop)},
+    {0x54, addr_mode_r_dx(instr_il_nop)},
+    {0x74, addr_mode_r_dx(instr_il_nop)},
+    {0xD4, addr_mode_r_dx(instr_il_nop)},
+    {0xF4, addr_mode_r_dx(instr_il_nop)},
+    {0x1C, addr_mode_r_ax(instr_il_nop)},
+    {0x3C, addr_mode_r_ax(instr_il_nop)},
+    {0x5C, addr_mode_r_ax(instr_il_nop)},
+    {0x7C, addr_mode_r_ax(instr_il_nop)},
+    {0xDC, addr_mode_r_ax(instr_il_nop)},
+    {0xFC, addr_mode_r_ax(instr_il_nop)},
+    {0x89, addr_mode_r_im(instr_il_nop)},
+    {0x82, addr_mode_r_im(instr_il_nop)},
+    {0xC2, addr_mode_r_im(instr_il_nop)},
+    {0xE2, addr_mode_r_im(instr_il_nop)},
+    {0x1A, instr_nop},
+    {0x3A, instr_nop},
+    {0x5A, instr_nop},
+    {0x7A, instr_nop},
+    {0xDA, instr_nop},
+    {0xFA, instr_nop},
 };
 
 Cpu::Cpu() {
@@ -333,12 +427,51 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_dx(std::function<uint8_t(Cpu&, uint
     };
 };
 
+// indirect x indexed addressing mode wrapper for read-modify-write instructions
+std::function<void(Cpu&)> Cpu::addr_mode_rmw_ix(std::function<uint8_t(Cpu&, uint8_t)> instr) {
+    return [=](Cpu& cpu) -> void {
+        uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
+        ptr_addr += cpu.m_x;
+
+        uint16_t addr = cpu.bus().read_data(ptr_addr++);
+        addr |= cpu.bus().read_data(ptr_addr);
+
+        uint8_t result = instr(cpu, cpu.bus().read_data(addr));
+        cpu.bus().write_data(addr, result);
+    };
+};
+
+// indirect y indexed addressing mode wrapper for read-modify-write instructions
+std::function<void(Cpu&)> Cpu::addr_mode_rmw_iy(std::function<uint8_t(Cpu&, uint8_t)> instr) {
+    return [=](Cpu& cpu) -> void {
+        uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
+
+        uint16_t addr = cpu.bus().read_data(ptr_addr++);
+        addr |= cpu.bus().read_data(ptr_addr);
+        addr += cpu.m_y;
+
+        uint8_t result = instr(cpu, cpu.bus().read_data(addr));
+        cpu.bus().write_data(addr, result);
+    };
+};
+
 // absolute x indexed addressing mode wrapper for read-modify-write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_rmw_ax(std::function<uint8_t(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
         uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
         addr += cpu.m_x;
+        uint8_t result = instr(cpu, cpu.bus().read_data(addr));
+        cpu.bus().write_data(addr, result);
+    };
+};
+
+// absolute y indexed addressing mode wrapper for read-modify-write instructions
+std::function<void(Cpu&)> Cpu::addr_mode_rmw_ay(std::function<uint8_t(Cpu&, uint8_t)> instr) {
+    return [=](Cpu& cpu) -> void {
+        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
+        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        addr += cpu.m_y;
         uint8_t result = instr(cpu, cpu.bus().read_data(addr));
         cpu.bus().write_data(addr, result);
     };
@@ -851,3 +984,104 @@ void Cpu::instr_txs(Cpu& cpu) {
 void Cpu::instr_tya(Cpu& cpu) {
     cpu.m_a = cpu.m_y;
 }
+
+// illegal no operation with ignored parameter
+void Cpu::instr_il_nop(Cpu& cpu, uint8_t arg) {
+
+}
+
+// illegal ASL (arithmetic shift left) + ORA (bitwise or)
+uint8_t Cpu::instr_il_slo(Cpu& cpu, uint8_t arg) {
+
+}
+
+// illegal ROL (rotate left) + AND (bitwise and)
+uint8_t Cpu::instr_il_rla(Cpu& cpu, uint8_t arg) {
+
+}
+
+// illegal LSR (logical shift right) + EOR (bitwise xor)
+uint8_t Cpu::instr_il_sre(Cpu& cpu, uint8_t arg) {
+
+}
+
+// illegal ROR (rotate right) + ADC (add with carry)
+uint8_t Cpu::instr_il_rra(Cpu& cpu, uint8_t arg) {
+
+}
+
+// illegal STA (store A) + STX (store X)
+uint8_t Cpu::instr_il_sax(Cpu& cpu) {
+
+}
+
+// illegal LDA (load A) + LDX (load X)
+void Cpu::instr_il_lax(Cpu& cpu, uint8_t arg) {
+
+}
+
+// illegal DEC (decrement) + CMP (compare A)
+uint8_t Cpu::instr_il_dcp(Cpu& cpu, uint8_t arg) {
+
+}
+
+// illegal INC (increment) + SBC (subtract with carry)
+uint8_t Cpu::instr_il_isc(Cpu& cpu, uint8_t arg) {
+
+}
+
+// illegal AND (bitwise and) + ASL (arethmetic shift left)
+void Cpu::instr_il_anc(Cpu& cpu, uint8_t arg) {
+
+}
+
+// illegal AND (bitwise and) + ROL (rotate left)
+void Cpu::instr_il_alr(Cpu& cpu, uint8_t arg) {
+
+}
+
+// illegal AND (bitwise and) + ROR (rotate right)
+void Cpu::instr_il_arr(Cpu& cpu, uint8_t arg) {
+
+}
+
+// illegal TXA (transfer X to A) + AND (bitwise and)
+void Cpu::instr_il_xaa(Cpu& cpu, uint8_t arg) {
+
+}
+
+// illegal CMP (compare A) + DEX (decrement X)
+void Cpu::instr_il_axs(Cpu& cpu, uint8_t arg) {
+
+}
+
+// illegal SBC (subtract with carry) + NOP (no operation)
+void Cpu::instr_il_sbc(Cpu& cpu, uint8_t arg) {
+
+}
+
+// illegal STA (store A) and STX (store X)
+uint8_t Cpu::instr_il_ahx(Cpu& cpu) {
+
+}
+
+// illegal STX (store X) & (high byte of addr + 1)
+uint8_t Cpu::instr_il_shx(Cpu& cpu) {
+
+}
+
+// illegal STY (store y) & (high byte of addr + 1)
+uint8_t Cpu::instr_il_shy(Cpu& cpu) {
+
+}
+
+// illegal STA (store A) + TXS (transfer X to S)
+uint8_t Cpu::instr_il_tas(Cpu& cpu) {
+
+}
+
+// illegal LDA (load A) + TSX (transfer S to X)
+void Cpu::instr_il_las(Cpu& cpu, uint8_t arg) {
+
+}
+
