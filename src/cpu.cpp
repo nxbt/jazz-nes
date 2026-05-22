@@ -223,7 +223,7 @@ std::map<uint8_t, std::function<void(Cpu&)>> Cpu::instr_map = {
     {0x8B, addr_mode_r_im(instr_il_xaa)},
     {0xAB, addr_mode_r_im(instr_il_lax)},
     {0xCB, addr_mode_r_im(instr_il_axs)},
-    {0xEB, addr_mode_r_im(instr_il_sbc)},
+    {0xEB, addr_mode_r_im(instr_sbc)},
     {0x93, addr_mode_w_iy(instr_il_ahx)},
     {0x9F, addr_mode_w_ay(instr_il_ahx)},
     {0x9C, addr_mode_w_ax(instr_il_shy)},
@@ -277,6 +277,32 @@ void Cpu::tick() {
 void Cpu::debug_overwrite_pc(uint16_t data) {
     std::cerr << "DEBUG: pc overwritten to 0x" << std::hex << std::setw(4) << std::setfill('0') << data << "\n";
     m_pc = data;
+}
+
+
+uint16_t Cpu::debug_report_pc() {
+    return m_pc;
+}
+
+uint8_t Cpu::debug_report_ps() {
+    return m_flag_n << 7 | m_flag_v << 6 | 1 << 5 | 0 << 4 |
+        m_flag_d << 3 | m_flag_i << 2 | m_flag_z << 1 | m_flag_c << 0;
+}
+
+uint8_t Cpu::debug_report_a() {
+    return m_a;
+}
+
+uint8_t Cpu::debug_report_x() {
+    return m_x;
+}
+
+uint8_t Cpu::debug_report_y() {
+    return m_y;
+}
+
+uint8_t Cpu::debug_report_sp() {
+    return m_s;
 }
 
 void Cpu::ir_fetch() {
@@ -383,7 +409,7 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_iy(std::function<void(Cpu&, uint8_t)>
         uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
 
         uint16_t addr = cpu.bus().read_data(ptr_addr++);
-        addr |= cpu.bus().read_data(ptr_addr);
+        addr |= cpu.bus().read_data(ptr_addr) << 8;
         addr += cpu.m_y;
 
         instr(cpu, cpu.bus().read_data(addr));
@@ -434,7 +460,7 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_ix(std::function<uint8_t(Cpu&, uint
         ptr_addr += cpu.m_x;
 
         uint16_t addr = cpu.bus().read_data(ptr_addr++);
-        addr |= cpu.bus().read_data(ptr_addr);
+        addr |= cpu.bus().read_data(ptr_addr) << 8;
 
         uint8_t result = instr(cpu, cpu.bus().read_data(addr));
         cpu.bus().write_data(addr, result);
@@ -447,7 +473,7 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_iy(std::function<uint8_t(Cpu&, uint
         uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
 
         uint16_t addr = cpu.bus().read_data(ptr_addr++);
-        addr |= cpu.bus().read_data(ptr_addr);
+        addr |= cpu.bus().read_data(ptr_addr) << 8;
         addr += cpu.m_y;
 
         uint8_t result = instr(cpu, cpu.bus().read_data(addr));
@@ -582,12 +608,13 @@ std::function<void(Cpu&)> Cpu::addr_mode_j_i(std::function<void(Cpu&, uint16_t)>
 // add with carry
 void Cpu::instr_adc(Cpu& cpu, uint8_t arg) {
     uint16_t result = cpu.m_a + arg + cpu.m_flag_c;
-    cpu.m_a = result;
 
     cpu.m_flag_c = result > 0xFF;
-    cpu.m_flag_z = result == 0;
+    cpu.m_flag_z = (result & 0xFF) == 0;
     cpu.m_flag_v = (result ^ cpu.m_a) & (result ^ arg) & 0x80;
-    cpu.m_flag_n = cpu.m_a & 0x80;
+    cpu.m_flag_n = result & 0x80;
+
+    cpu.m_a = result;
 }
 
 // bitwise and
@@ -601,7 +628,7 @@ void Cpu::instr_and(Cpu& cpu, uint8_t arg) {
 
 // arithmetic shift left
 uint8_t Cpu::instr_asl(Cpu& cpu, uint8_t arg) {
-    uint8_t result = arg < 1;
+    uint8_t result = arg << 1;
 
     cpu.m_flag_c = arg & 0x80;
     cpu.m_flag_z = result == 0;
@@ -717,7 +744,7 @@ void Cpu::instr_clv(Cpu& cpu) {
 void Cpu::instr_cmp(Cpu& cpu, uint8_t arg) {
     uint8_t result = cpu.m_a - arg;
 
-    cpu.m_flag_c = cpu.m_a > arg;
+    cpu.m_flag_c = cpu.m_a >= arg;
     cpu.m_flag_z = cpu.m_a == arg;
     cpu.m_flag_n = result & 0x80;
 }
@@ -726,7 +753,7 @@ void Cpu::instr_cmp(Cpu& cpu, uint8_t arg) {
 void Cpu::instr_cpx(Cpu& cpu, uint8_t arg) {
     uint8_t result = cpu.m_x - arg;
 
-    cpu.m_flag_c = cpu.m_x > arg;
+    cpu.m_flag_c = cpu.m_x >= arg;
     cpu.m_flag_z = cpu.m_x == arg;
     cpu.m_flag_n = result & 0x80;
 }
@@ -735,44 +762,69 @@ void Cpu::instr_cpx(Cpu& cpu, uint8_t arg) {
 void Cpu::instr_cpy(Cpu& cpu, uint8_t arg) {
     uint8_t result = cpu.m_y - arg;
 
-    cpu.m_flag_c = cpu.m_y > arg;
+    cpu.m_flag_c = cpu.m_y >= arg;
     cpu.m_flag_z = cpu.m_y == arg;
     cpu.m_flag_n = result & 0x80;
 }
 
 // decrement memory
 uint8_t Cpu::instr_dec(Cpu& cpu, uint8_t arg) {
-    return arg - 1;
+    uint8_t result =  arg - 1;
+
+    cpu.m_flag_z = result == 0;
+    cpu.m_flag_n = result & 0x80;
+
+    return result;
 }
 
 // decrement X
 void Cpu::instr_dex(Cpu& cpu) {
     cpu.m_x--;
+
+    cpu.m_flag_z = cpu.m_x == 0;
+    cpu.m_flag_n = cpu.m_x & 0x80;
 }
 
 // decrement Y
 void Cpu::instr_dey(Cpu& cpu) {
     cpu.m_y--;
+
+    cpu.m_flag_z = cpu.m_y == 0;
+    cpu.m_flag_n = cpu.m_y & 0x80;
 }
 
 // bitwise exclusive or
 void Cpu::instr_eor(Cpu& cpu, uint8_t arg) {
     cpu.m_a = cpu.m_a ^ arg;
+
+    cpu.m_flag_z = cpu.m_a == 0;
+    cpu.m_flag_n = cpu.m_a & 0x80;
 }
 
 // increment memory
 uint8_t Cpu::instr_inc(Cpu& cpu, uint8_t arg) {
-    return arg + 1;
+    uint8_t result =  arg + 1;
+
+    cpu.m_flag_z = result == 0;
+    cpu.m_flag_n = result & 0x80;
+
+    return result;
 }
 
 // increment x
 void Cpu::instr_inx(Cpu& cpu) {
     cpu.m_x++;
+
+    cpu.m_flag_z = cpu.m_x == 0;
+    cpu.m_flag_n = cpu.m_x & 0x80;
 }
 
 // increment y
 void Cpu::instr_iny(Cpu& cpu) {
     cpu.m_y++;
+
+    cpu.m_flag_z = cpu.m_y == 0;
+    cpu.m_flag_n = cpu.m_y & 0x80;
 }
 
 // jump
@@ -918,11 +970,14 @@ void Cpu::instr_rts(Cpu& cpu) {
 
 // subtract with carry
 void Cpu::instr_sbc(Cpu& cpu, uint8_t arg) {
-    uint16_t result = cpu.m_a - arg - !cpu.m_flag_c;
+    int16_t result = cpu.m_a - arg - !cpu.m_flag_c;
 
-    cpu.m_flag_c = ~(result > 0xFF);
-    cpu.m_flag_z = result == 0;
+    cpu.m_flag_c = !(result < 0x00);
+    cpu.m_flag_z = (result & 0xFF) == 0;
     cpu.m_flag_v = (result ^ cpu.m_a) & (result ^ ~arg) & 0x80;
+    cpu.m_flag_n = result & 0x80;
+
+    cpu.m_a = result;
 }
 
 // set carry
@@ -958,21 +1013,33 @@ uint8_t Cpu::instr_sty(Cpu& cpu) {
 // transfer A to X
 void Cpu::instr_tax(Cpu& cpu) {
     cpu.m_x = cpu.m_a;
+
+    cpu.m_flag_z = cpu.m_x == 0;
+    cpu.m_flag_n = cpu.m_x & 0x80;
 }
 
 // transfer A to Y
 void Cpu::instr_tay(Cpu& cpu) {
     cpu.m_y = cpu.m_a;
+
+    cpu.m_flag_z = cpu.m_y == 0;
+    cpu.m_flag_n = cpu.m_y & 0x80;
 }
 
 // transfer stack pointer to X
 void Cpu::instr_tsx(Cpu& cpu) {
     cpu.m_x = cpu.m_s;
+
+    cpu.m_flag_z = cpu.m_x == 0;
+    cpu.m_flag_n = cpu.m_x & 0x80;
 }
 
 // transfer X to A
 void Cpu::instr_txa(Cpu& cpu) {
     cpu.m_a = cpu.m_x;
+
+    cpu.m_flag_z = cpu.m_a == 0;
+    cpu.m_flag_n = cpu.m_a & 0x80;
 }
 
 // tranfer X to stack pointer
@@ -983,6 +1050,9 @@ void Cpu::instr_txs(Cpu& cpu) {
 // transfer Y to A
 void Cpu::instr_tya(Cpu& cpu) {
     cpu.m_a = cpu.m_y;
+
+    cpu.m_flag_z = cpu.m_a == 0;
+    cpu.m_flag_n = cpu.m_a & 0x80;
 }
 
 // illegal no operation with ignored parameter
@@ -992,67 +1062,158 @@ void Cpu::instr_il_nop(Cpu& cpu, uint8_t arg) {
 
 // illegal ASL (arithmetic shift left) + ORA (bitwise or)
 uint8_t Cpu::instr_il_slo(Cpu& cpu, uint8_t arg) {
+    cpu.m_flag_c = arg & 0x80;
 
+    arg = arg << 1;
+
+    cpu.m_a |= arg;
+
+    cpu.m_flag_n = cpu.m_a & 0x80;
+    cpu.m_flag_z = cpu.m_a == 0;
+
+    return arg;
 }
 
 // illegal ROL (rotate left) + AND (bitwise and)
 uint8_t Cpu::instr_il_rla(Cpu& cpu, uint8_t arg) {
+    uint16_t result = arg << 1;
+    result |= cpu.m_flag_c;
 
+    cpu.m_a &= result;
+
+    cpu.m_flag_n = cpu.m_a & 0x80;
+    cpu.m_flag_z = cpu.m_a == 0;
+    cpu.m_flag_c = arg & 0x80;
+
+    return result;
 }
 
 // illegal LSR (logical shift right) + EOR (bitwise xor)
 uint8_t Cpu::instr_il_sre(Cpu& cpu, uint8_t arg) {
+    uint8_t result = arg >> 1;
+    cpu.m_a ^= result;
 
+    cpu.m_flag_n = cpu.m_a & 0x80;
+    cpu.m_flag_z = cpu.m_a == 0;
+    cpu.m_flag_c = arg & 0x01;
+
+    return result;
 }
 
 // illegal ROR (rotate right) + ADC (add with carry)
 uint8_t Cpu::instr_il_rra(Cpu& cpu, uint8_t arg) {
+    uint16_t ror_result = arg >> 1;
+    ror_result |= cpu.m_flag_c << 7;
 
+    cpu.m_flag_c = arg & 0x01;
+
+    uint16_t adc_result = cpu.m_a + (ror_result & 0xFF) + cpu.m_flag_c;
+    cpu.m_a = adc_result;
+
+    cpu.m_flag_c = adc_result > 0xFF;
+    cpu.m_flag_z = adc_result == 0;
+    cpu.m_flag_v = (adc_result ^ cpu.m_a) & (adc_result ^ arg) & 0x80;
+    cpu.m_flag_n = cpu.m_a & 0x80;
+
+    return ror_result;
 }
 
 // illegal STA (store A) + STX (store X)
 uint8_t Cpu::instr_il_sax(Cpu& cpu) {
-
+    return cpu.m_a & cpu.m_x;
 }
 
 // illegal LDA (load A) + LDX (load X)
 void Cpu::instr_il_lax(Cpu& cpu, uint8_t arg) {
+    cpu.m_a = arg;
+    cpu.m_x = arg;
 
+    cpu.m_flag_n = cpu.m_a & 0x80;
+    cpu.m_flag_z = cpu.m_a == 0;
 }
 
 // illegal DEC (decrement) + CMP (compare A)
 uint8_t Cpu::instr_il_dcp(Cpu& cpu, uint8_t arg) {
+    arg--;
 
+    uint8_t result = cpu.m_a - arg;
+
+    cpu.m_flag_c = cpu.m_a >= arg;
+    cpu.m_flag_z = cpu.m_a == arg;
+    cpu.m_flag_n = result & 0x80;
+
+    return arg;
 }
 
 // illegal INC (increment) + SBC (subtract with carry)
 uint8_t Cpu::instr_il_isc(Cpu& cpu, uint8_t arg) {
+    arg++;
 
+    int16_t result = cpu.m_a - arg - !cpu.m_flag_c;
+
+    cpu.m_flag_c = !(result < 0x00);
+    cpu.m_flag_z = (result & 0xFF) == 0;
+    cpu.m_flag_v = (result ^ cpu.m_a) & (result ^ ~arg) & 0x80;
+    cpu.m_flag_n = result & 0x80;
+
+    cpu.m_a = result;
+
+    return arg;
 }
 
 // illegal AND (bitwise and) + ASL (arethmetic shift left)
 void Cpu::instr_il_anc(Cpu& cpu, uint8_t arg) {
+    uint8_t result = cpu.m_a & arg;
+    cpu.m_a = result;
 
+    cpu.m_flag_n = result & 0x80;
+    cpu.m_flag_z = result == 0;
+    cpu.m_flag_c = result & 0x80;
 }
 
-// illegal AND (bitwise and) + ROL (rotate left)
+// illegal AND (bitwise and) + LSR (logical shift right)
 void Cpu::instr_il_alr(Cpu& cpu, uint8_t arg) {
+    cpu.m_a &= arg;
 
+    uint8_t result = cpu.m_a >> 1;
+
+    cpu.m_flag_c = cpu.m_a & 0x01;
+    cpu.m_flag_z = result == 0;
+    cpu.m_flag_n = false;
+
+    cpu.m_a = result;
 }
 
 // illegal AND (bitwise and) + ROR (rotate right)
 void Cpu::instr_il_arr(Cpu& cpu, uint8_t arg) {
+    cpu.m_a &= arg;
 
+    uint8_t result = cpu.m_a >> 1;
+    result |= cpu.m_flag_c << 7;
+
+    cpu.m_flag_n = result & 0x80;
+    cpu.m_flag_v = (cpu.m_a & 0x80) ^ (cpu.m_a & 0x40);
+    cpu.m_flag_z = cpu.m_a == 0;
+    cpu.m_flag_c = result & 0x80;
+
+    cpu.m_a = result;
 }
 
 // illegal TXA (transfer X to A) + AND (bitwise and)
 void Cpu::instr_il_xaa(Cpu& cpu, uint8_t arg) {
-
+    std::cerr << "WARNING: unstable illegal instruction XAA not implemented\n";
 }
 
 // illegal CMP (compare A) + DEX (decrement X)
 void Cpu::instr_il_axs(Cpu& cpu, uint8_t arg) {
+    cpu.m_x &= cpu.m_a;
 
+    cpu.m_flag_c = arg > cpu.m_x;
+
+    cpu.m_x -= arg;
+
+    cpu.m_flag_n = cpu.m_x & 0x80;
+    cpu.m_flag_z = cpu.m_x == 0;
 }
 
 // illegal SBC (subtract with carry) + NOP (no operation)
@@ -1062,26 +1223,30 @@ void Cpu::instr_il_sbc(Cpu& cpu, uint8_t arg) {
 
 // illegal STA (store A) and STX (store X)
 uint8_t Cpu::instr_il_ahx(Cpu& cpu) {
-
+    return cpu.m_a & cpu.m_x & (cpu.bus().read_data(cpu.m_pc - 1) + 1);
 }
 
 // illegal STX (store X) & (high byte of addr + 1)
 uint8_t Cpu::instr_il_shx(Cpu& cpu) {
-
+    return cpu.m_x & (cpu.bus().read_data(cpu.m_pc - 1) + 1);
 }
 
 // illegal STY (store y) & (high byte of addr + 1)
 uint8_t Cpu::instr_il_shy(Cpu& cpu) {
-
+    return cpu.m_y & (cpu.bus().read_data(cpu.m_pc - 1) + 1);
 }
 
 // illegal STA (store A) + TXS (transfer X to S)
 uint8_t Cpu::instr_il_tas(Cpu& cpu) {
+    cpu.m_s = cpu.m_a & cpu.m_x;
 
+    return cpu.m_a & cpu.m_x & (cpu.bus().read_data(cpu.m_pc - 1) + 1);
 }
 
 // illegal LDA (load A) + TSX (transfer S to X)
 void Cpu::instr_il_las(Cpu& cpu, uint8_t arg) {
-
+    cpu.m_s &= arg;
+    cpu.m_a = cpu.m_s;
+    cpu.m_x = cpu.m_s;
 }
 

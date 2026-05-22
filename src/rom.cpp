@@ -21,5 +21,5 @@ uint8_t Rom::read_data(uint16_t addr_local) {
 }
 
 void Rom::write_data(uint16_t addr_local, uint8_t data) {
-    std::cerr << "WARNING: attempt to write data to ROM ignored";
+    std::cerr << "WARNING: attempt to write data to ROM ignored\n";
 }

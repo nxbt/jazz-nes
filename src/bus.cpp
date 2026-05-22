@@ -3,6 +3,7 @@
 #include "bus_component.h"
 
 #include <iostream>
+#include <iomanip>
 
 Bus::Bus() {}
 
@@ -19,12 +20,12 @@ uint8_t Bus::read_data(uint16_t addr) {
         if(addr_offset > addr) break;
         if(addr_offset + component.m_size <= addr) continue;
 
-        if(++components_hit > 1) { std::cerr << "WARNING: read_data bus conflict at " << addr << "\n"; }
+        if(++components_hit > 1) { std::cerr << "WARNING: read_data bus conflict at 0x" << std::hex << std::setw(4) << std::setfill('0') << addr << "\n"; }
 
         m_data = component.read_data(addr - addr_offset);
     }
 
-    if(components_hit == 0) { std::cerr << "WARNING: read_data open bus at " << addr << "\n"; }
+    if(components_hit == 0) { std::cerr << "WARNING: read_data open bus at 0x" << std::hex << std::setw(4) << std::setfill('0') << addr << "\n"; }
 
     return m_data;
 }
@@ -40,10 +41,10 @@ void Bus::write_data(uint16_t addr, uint8_t data) {
         if(addr_offset > addr) break;
         if(addr_offset + component.m_size < addr) continue;
 
-        if(++components_hit > 1) { std::cerr << "WARNING: write_data overloaded at " << addr << "\n"; }
+        if(++components_hit > 1) { std::cerr << "WARNING: write_data overloaded at 0x" << std::hex << std::setw(4) << std::setfill('0') << addr << "\n"; }
 
         component.write_data(addr - addr_offset, data);
     }
 
-    if(components_hit == 0) { std::cerr << "WARNING: write_data failed at " << addr << "\n"; }
+    if(components_hit == 0) { std::cerr << "WARNING: write_data failed at 0x" << std::hex << std::setw(4) << std::setfill('0') << addr << "\n"; }
 }

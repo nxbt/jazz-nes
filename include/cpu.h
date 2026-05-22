@@ -23,6 +23,14 @@ public:
 
     void debug_overwrite_pc(uint16_t);
 
+    uint16_t debug_report_pc();
+    uint8_t debug_report_ps();
+    uint8_t debug_report_a();
+    uint8_t debug_report_x();
+    uint8_t debug_report_y();
+    uint8_t debug_report_sp();
+
+
     Cpu(Cpu const&) = delete;
     void operator=(Cpu const&) = delete;
 
