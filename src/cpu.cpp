@@ -269,6 +269,7 @@ Cpu::Cpu() {
 void Cpu::tick() {
     if(m_clock_lead > 0) {
         m_clock_lead--;
+        return;
     }
 
     ir_fetch();
@@ -308,6 +309,9 @@ uint8_t Cpu::debug_report_sp() {
 void Cpu::ir_fetch() {
     uint8_t ir = bus().read_data(m_pc++);
     
+    // instructions take at least 2 cycles (including the current cycle)
+    m_clock_lead += 1;
+    
     try {
         instr_map[ir](*this);
     }
@@ -337,7 +341,10 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_im(std::function<void(Cpu&, uint8_t)>
 // zero page addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_d(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 1;
+
         uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
+
         instr(cpu, cpu.bus().read_data(addr));
     };
 }
@@ -345,8 +352,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_d(std::function<void(Cpu&, uint8_t)> 
 // absolute addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_a(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 2;
+
         uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+
         instr(cpu, cpu.bus().read_data(addr));
     };
 }
@@ -354,8 +364,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_a(std::function<void(Cpu&, uint8_t)> 
 // zero page x indexed addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_dx(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 2;
+
         uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr += cpu.m_x;
+
         instr(cpu, cpu.bus().read_data(addr));
     };
 }
@@ -363,8 +376,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_dx(std::function<void(Cpu&, uint8_t)>
 // zero page y indexed addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_dy(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 2;
+
         uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr += cpu.m_y;
+
         instr(cpu, cpu.bus().read_data(addr));
     };
 }
@@ -373,9 +389,18 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_dy(std::function<void(Cpu&, uint8_t)>
 // absolute x indexed addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_ax(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 2;
+
         uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        
+        // add a cycle if a page boundry is crossed
+        if(addr & 0xFF00 != (addr + cpu.m_x) & 0xFF00) {
+            cpu.m_clock_lead += 1;
+        }
+
         addr += cpu.m_x;
+
         instr(cpu, cpu.bus().read_data(addr));
     };
 }
@@ -383,9 +408,18 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_ax(std::function<void(Cpu&, uint8_t)>
 // absolute y indexed addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_ay(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 2;
+
         uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+
+        // add a cycle if a page boundry is crossed
+        if(addr & 0xFF00 != (addr + cpu.m_y) & 0xFF00) {
+            cpu.m_clock_lead += 1;
+        }
+
         addr += cpu.m_y;
+
         instr(cpu, cpu.bus().read_data(addr));
     };
 }
@@ -393,6 +427,8 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_ay(std::function<void(Cpu&, uint8_t)>
 // indirect x indexed addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_ix(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 4;
+
         uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
         ptr_addr += cpu.m_x;
 
@@ -406,10 +442,18 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_ix(std::function<void(Cpu&, uint8_t)>
 // indirect y index addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_iy(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 3;
+
         uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
 
         uint16_t addr = cpu.bus().read_data(ptr_addr++);
         addr |= cpu.bus().read_data(ptr_addr) << 8;
+
+        // add a cycle if a page boundry is crossed
+        if(addr & 0xFF00 != (addr + cpu.m_y) & 0xFF00) {
+            cpu.m_clock_lead += 1;
+        }
+
         addr += cpu.m_y;
 
         instr(cpu, cpu.bus().read_data(addr));
@@ -427,7 +471,10 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_ac(std::function<uint8_t(Cpu&, uint
 // zero page addressing mode wrapper for read-modify-write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_rmw_d(std::function<uint8_t(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 3;
+
         uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
+
         uint8_t result = instr(cpu, cpu.bus().read_data(addr));
         cpu.bus().write_data(addr, result);
     };
@@ -436,8 +483,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_d(std::function<uint8_t(Cpu&, uint8
 // absolute addressing mode wrapper for read-modify-write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_rmw_a(std::function<uint8_t(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 4;
+
         uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+
         uint8_t result = instr(cpu, cpu.bus().read_data(addr));
         cpu.bus().write_data(addr, result);
     };
@@ -446,8 +496,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_a(std::function<uint8_t(Cpu&, uint8
 // zero page x indexed addressing mode wrapper for read-modify-write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_rmw_dx(std::function<uint8_t(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 4;
+
         uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr += cpu.m_x;
+
         uint8_t result = instr(cpu, cpu.bus().read_data(addr));
         cpu.bus().write_data(addr, result);
     };
@@ -456,6 +509,8 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_dx(std::function<uint8_t(Cpu&, uint
 // indirect x indexed addressing mode wrapper for read-modify-write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_rmw_ix(std::function<uint8_t(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 6;
+
         uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
         ptr_addr += cpu.m_x;
 
@@ -470,6 +525,8 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_ix(std::function<uint8_t(Cpu&, uint
 // indirect y indexed addressing mode wrapper for read-modify-write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_rmw_iy(std::function<uint8_t(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 6;
+
         uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
 
         uint16_t addr = cpu.bus().read_data(ptr_addr++);
@@ -484,9 +541,12 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_iy(std::function<uint8_t(Cpu&, uint
 // absolute x indexed addressing mode wrapper for read-modify-write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_rmw_ax(std::function<uint8_t(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 5;
+
         uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
         addr += cpu.m_x;
+
         uint8_t result = instr(cpu, cpu.bus().read_data(addr));
         cpu.bus().write_data(addr, result);
     };
@@ -495,9 +555,12 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_ax(std::function<uint8_t(Cpu&, uint
 // absolute y indexed addressing mode wrapper for read-modify-write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_rmw_ay(std::function<uint8_t(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 5;
+
         uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
         addr += cpu.m_y;
+
         uint8_t result = instr(cpu, cpu.bus().read_data(addr));
         cpu.bus().write_data(addr, result);
     };
@@ -506,6 +569,8 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_ay(std::function<uint8_t(Cpu&, uint
 // zero page addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_d(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 1;
+
         uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
         cpu.bus().write_data(addr, instr(cpu));
     };
@@ -514,8 +579,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_d(std::function<uint8_t(Cpu&)> instr)
 // absolute addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_a(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 2;
+
         uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+
         cpu.bus().write_data(addr, instr(cpu));
     };
 }
@@ -523,8 +591,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_a(std::function<uint8_t(Cpu&)> instr)
 // zero page x indexed addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_dx(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 2;
+
         uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr += cpu.m_x;
+
         cpu.bus().write_data(addr, instr(cpu));
     };
 }
@@ -532,8 +603,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_dx(std::function<uint8_t(Cpu&)> instr
 // zero page y indexed addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_dy(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 2;
+
         uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr += cpu.m_y;
+
         cpu.bus().write_data(addr, instr(cpu));
     };
 }
@@ -541,9 +615,12 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_dy(std::function<uint8_t(Cpu&)> instr
 // absolute x indexed addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_ax(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 3;
+
         uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
         addr += cpu.m_x;
+
         cpu.bus().write_data(addr, instr(cpu));
     };
 }
@@ -551,9 +628,12 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_ax(std::function<uint8_t(Cpu&)> instr
 // absolute y indexed addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_ay(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 3;
+
         uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
         addr += cpu.m_y;
+
         cpu.bus().write_data(addr, instr(cpu));
     };
 }
@@ -561,6 +641,8 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_ay(std::function<uint8_t(Cpu&)> instr
 // indirect x indexed addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_ix(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 4;
+
         uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
         ptr_addr += cpu.m_x;
 
@@ -574,6 +656,8 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_ix(std::function<uint8_t(Cpu&)> instr
 // indirect y indexed addressing mode wrapper for write instructions
 std::function<void(Cpu&)> Cpu::addr_mode_w_iy(std::function<uint8_t(Cpu&)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 4;
+
         uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
     
         uint16_t addr = cpu.bus().read_data(ptr_addr++);
@@ -587,8 +671,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_iy(std::function<uint8_t(Cpu&)> instr
 // absolute addressing mode wrapper for jump instructions
 std::function<void(Cpu&)> Cpu::addr_mode_j_a(std::function<void(Cpu&, uint16_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 1;
+
         uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
         addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+
         instr(cpu, addr);
     };
 }
@@ -596,8 +683,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_j_a(std::function<void(Cpu&, uint16_t)>
 // indirect addressing mode wrapper for jump instructions
 std::function<void(Cpu&)> Cpu::addr_mode_j_i(std::function<void(Cpu&, uint16_t)> instr) {
     return [=](Cpu& cpu) -> void {
+        cpu.m_clock_lead += 3;
+
         uint16_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
         ptr_addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+
         uint16_t addr = cpu.bus().read_data(ptr_addr);
         addr |= cpu.bus().read_data(((ptr_addr + 1) & 0x00FF ) | (ptr_addr & 0xFF00)) << 8;
         instr(cpu, addr);
