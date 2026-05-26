@@ -11,7 +11,7 @@ Nes::Nes() {
     m_onboard_ram_ptr = new Ram(0x0800);
 
     for(uint16_t addr = 0x0000; addr < 0x2000; addr += 0x0800) {
-        cpu().bus().add_component(*m_onboard_ram_ptr, addr);
+        cpu().add_bus_component(*m_onboard_ram_ptr, addr);
     }
 }
 

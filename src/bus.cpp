@@ -22,7 +22,7 @@ uint8_t Bus::read_data(uint16_t addr) {
 
         if(++components_hit > 1) { std::cerr << "WARNING: read_data bus conflict at 0x" << std::hex << std::setw(4) << std::setfill('0') << addr << "\n"; }
 
-        m_data = component.read_data(addr - addr_offset);
+        m_data = component.read_from(addr - addr_offset);
     }
 
     if(components_hit == 0) { std::cerr << "WARNING: read_data open bus at 0x" << std::hex << std::setw(4) << std::setfill('0') << addr << "\n"; }
@@ -43,8 +43,8 @@ void Bus::write_data(uint16_t addr, uint8_t data) {
 
         if(++components_hit > 1) { std::cerr << "WARNING: write_data overloaded at 0x" << std::hex << std::setw(4) << std::setfill('0') << addr << "\n"; }
 
-        component.write_data(addr - addr_offset, data);
+        component.write_to(addr - addr_offset, data);
     }
 
-    if(components_hit == 0) { std::cerr << "WARNING: write_data failed at 0x" << std::hex << std::setw(4) << std::setfill('0') << addr << "\n"; }
+    if(components_hit == 0) { std::cerr << "WARNING: write_data to unmapped memory at 0x" << std::hex << std::setw(4) << std::setfill('0') << addr << "\n"; }
 }

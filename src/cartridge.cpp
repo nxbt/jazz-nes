@@ -40,10 +40,10 @@ void Cartridge::setup_nrom(Cartridge& cartridge, Nes& nes) {
 
     // connect cartridge RAM and ROM to the cpu bus, mirroring as necessary
     for(int addr = 0x6000; addr < 0x7FFF; addr += prg_ram_size) {
-        nes.cpu().bus().add_component(*prg_ram_ptr, addr);
+        nes.cpu().add_bus_component(*prg_ram_ptr, addr);
     }
 
     for(int addr = 0x8000; addr < 0xFFFF; addr += prg_rom_size) {
-        nes.cpu().bus().add_component(*prg_rom_ptr, addr);
+        nes.cpu().add_bus_component(*prg_rom_ptr, addr);
     }
 }

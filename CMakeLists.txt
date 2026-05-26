@@ -16,6 +16,7 @@ set(INC_FILES
     ${INC}/ram.h
     ${INC}/rom.h
     ${INC}/nes.h
+    ${INC}/ppu.h
 )
 set(SRC_FILES
     ${SRC}/bus.cpp
@@ -27,6 +28,7 @@ set(SRC_FILES
     ${SRC}/ram.cpp
     ${SRC}/rom.cpp
     ${SRC}/nes.cpp
+    ${SRC}/ppu.cpp
 )
 
 add_executable(jazz_nes ${SRC}/main.cpp ${INC_FILES} ${SRC_FILES})

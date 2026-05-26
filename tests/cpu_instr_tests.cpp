@@ -29,8 +29,8 @@ int main() {
 
     out.close();
 
-    uint8_t result_instrs_offical = nes.cpu().bus().read_data(0x0002);
-    uint8_t result_instrs_illegal = nes.cpu().bus().read_data(0x0003);
+    uint8_t result_instrs_offical = nes.cpu().read_data(0x0002);
+    uint8_t result_instrs_illegal = nes.cpu().read_data(0x0003);
 
     std::cerr << "RESULT: offical instruction byte: 0x" <<
         std::hex << std::setw(2) << std::setfill('0') << +result_instrs_offical << "\n";

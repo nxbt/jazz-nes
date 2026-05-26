@@ -307,7 +307,7 @@ uint8_t Cpu::debug_report_sp() {
 }
 
 void Cpu::ir_fetch() {
-    uint8_t ir = bus().read_data(m_pc++);
+    uint8_t ir = read_data(m_pc++);
     
     // instructions take at least 2 cycles (including the current cycle)
     m_clock_lead += 1;
@@ -324,17 +324,17 @@ void Cpu::ir_fetch() {
 }
 
 void Cpu::stack_push(uint8_t data) {
-    bus().write_data(0x0100 + m_s--, data);
+    write_data(0x0100 + m_s--, data);
 }
 
 uint8_t Cpu::stack_pull() {
-    return bus().read_data(0x0100 + ++m_s);
+    return read_data(0x0100 + ++m_s);
 }
 
 // immidiate addressing mode wrapper for read instruction
 std::function<void(Cpu&)> Cpu::addr_mode_r_im(std::function<void(Cpu&, uint8_t)> instr) {
     return [=](Cpu& cpu) -> void {
-        instr(cpu, cpu.bus().read_data(cpu.m_pc++));
+        instr(cpu, cpu.read_data(cpu.m_pc++));
     };
 }
 
@@ -343,9 +343,9 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_d(std::function<void(Cpu&, uint8_t)> 
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 1;
 
-        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
+        uint8_t addr = cpu.read_data(cpu.m_pc++);
 
-        instr(cpu, cpu.bus().read_data(addr));
+        instr(cpu, cpu.read_data(addr));
     };
 }
 
@@ -354,10 +354,10 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_a(std::function<void(Cpu&, uint8_t)> 
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 2;
 
-        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
-        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.read_data(cpu.m_pc++);
+        addr |= cpu.read_data(cpu.m_pc++) << 8;
 
-        instr(cpu, cpu.bus().read_data(addr));
+        instr(cpu, cpu.read_data(addr));
     };
 }
 
@@ -366,10 +366,10 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_dx(std::function<void(Cpu&, uint8_t)>
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 2;
 
-        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
+        uint8_t addr = cpu.read_data(cpu.m_pc++);
         addr += cpu.m_x;
 
-        instr(cpu, cpu.bus().read_data(addr));
+        instr(cpu, cpu.read_data(addr));
     };
 }
 
@@ -378,10 +378,10 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_dy(std::function<void(Cpu&, uint8_t)>
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 2;
 
-        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
+        uint8_t addr = cpu.read_data(cpu.m_pc++);
         addr += cpu.m_y;
 
-        instr(cpu, cpu.bus().read_data(addr));
+        instr(cpu, cpu.read_data(addr));
     };
 }
 
@@ -391,8 +391,8 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_ax(std::function<void(Cpu&, uint8_t)>
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 2;
 
-        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
-        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.read_data(cpu.m_pc++);
+        addr |= cpu.read_data(cpu.m_pc++) << 8;
         
         // add a cycle if a page boundry is crossed
         if(addr & 0xFF00 != (addr + cpu.m_x) & 0xFF00) {
@@ -401,7 +401,7 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_ax(std::function<void(Cpu&, uint8_t)>
 
         addr += cpu.m_x;
 
-        instr(cpu, cpu.bus().read_data(addr));
+        instr(cpu, cpu.read_data(addr));
     };
 }
 
@@ -410,8 +410,8 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_ay(std::function<void(Cpu&, uint8_t)>
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 2;
 
-        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
-        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.read_data(cpu.m_pc++);
+        addr |= cpu.read_data(cpu.m_pc++) << 8;
 
         // add a cycle if a page boundry is crossed
         if(addr & 0xFF00 != (addr + cpu.m_y) & 0xFF00) {
@@ -420,7 +420,7 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_ay(std::function<void(Cpu&, uint8_t)>
 
         addr += cpu.m_y;
 
-        instr(cpu, cpu.bus().read_data(addr));
+        instr(cpu, cpu.read_data(addr));
     };
 }
 
@@ -429,13 +429,13 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_ix(std::function<void(Cpu&, uint8_t)>
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 4;
 
-        uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
+        uint8_t ptr_addr = cpu.read_data(cpu.m_pc++);
         ptr_addr += cpu.m_x;
 
-        uint16_t addr = cpu.bus().read_data(ptr_addr++);
-        addr |= cpu.bus().read_data(ptr_addr) << 8;
+        uint16_t addr = cpu.read_data(ptr_addr++);
+        addr |= cpu.read_data(ptr_addr) << 8;
 
-        instr(cpu, cpu.bus().read_data(addr));
+        instr(cpu, cpu.read_data(addr));
     };
 }
 
@@ -444,10 +444,10 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_iy(std::function<void(Cpu&, uint8_t)>
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 3;
 
-        uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
+        uint8_t ptr_addr = cpu.read_data(cpu.m_pc++);
 
-        uint16_t addr = cpu.bus().read_data(ptr_addr++);
-        addr |= cpu.bus().read_data(ptr_addr) << 8;
+        uint16_t addr = cpu.read_data(ptr_addr++);
+        addr |= cpu.read_data(ptr_addr) << 8;
 
         // add a cycle if a page boundry is crossed
         if(addr & 0xFF00 != (addr + cpu.m_y) & 0xFF00) {
@@ -456,7 +456,7 @@ std::function<void(Cpu&)> Cpu::addr_mode_r_iy(std::function<void(Cpu&, uint8_t)>
 
         addr += cpu.m_y;
 
-        instr(cpu, cpu.bus().read_data(addr));
+        instr(cpu, cpu.read_data(addr));
     };
 }
 
@@ -473,10 +473,10 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_d(std::function<uint8_t(Cpu&, uint8
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 3;
 
-        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
+        uint8_t addr = cpu.read_data(cpu.m_pc++);
 
-        uint8_t result = instr(cpu, cpu.bus().read_data(addr));
-        cpu.bus().write_data(addr, result);
+        uint8_t result = instr(cpu, cpu.read_data(addr));
+        cpu.write_data(addr, result);
     };
 };
 
@@ -485,11 +485,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_a(std::function<uint8_t(Cpu&, uint8
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 4;
 
-        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
-        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.read_data(cpu.m_pc++);
+        addr |= cpu.read_data(cpu.m_pc++) << 8;
 
-        uint8_t result = instr(cpu, cpu.bus().read_data(addr));
-        cpu.bus().write_data(addr, result);
+        uint8_t result = instr(cpu, cpu.read_data(addr));
+        cpu.write_data(addr, result);
     };
 };
 
@@ -498,11 +498,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_dx(std::function<uint8_t(Cpu&, uint
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 4;
 
-        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
+        uint8_t addr = cpu.read_data(cpu.m_pc++);
         addr += cpu.m_x;
 
-        uint8_t result = instr(cpu, cpu.bus().read_data(addr));
-        cpu.bus().write_data(addr, result);
+        uint8_t result = instr(cpu, cpu.read_data(addr));
+        cpu.write_data(addr, result);
     };
 };
 
@@ -511,14 +511,14 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_ix(std::function<uint8_t(Cpu&, uint
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 6;
 
-        uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
+        uint8_t ptr_addr = cpu.read_data(cpu.m_pc++);
         ptr_addr += cpu.m_x;
 
-        uint16_t addr = cpu.bus().read_data(ptr_addr++);
-        addr |= cpu.bus().read_data(ptr_addr) << 8;
+        uint16_t addr = cpu.read_data(ptr_addr++);
+        addr |= cpu.read_data(ptr_addr) << 8;
 
-        uint8_t result = instr(cpu, cpu.bus().read_data(addr));
-        cpu.bus().write_data(addr, result);
+        uint8_t result = instr(cpu, cpu.read_data(addr));
+        cpu.write_data(addr, result);
     };
 };
 
@@ -527,14 +527,14 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_iy(std::function<uint8_t(Cpu&, uint
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 6;
 
-        uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
+        uint8_t ptr_addr = cpu.read_data(cpu.m_pc++);
 
-        uint16_t addr = cpu.bus().read_data(ptr_addr++);
-        addr |= cpu.bus().read_data(ptr_addr) << 8;
+        uint16_t addr = cpu.read_data(ptr_addr++);
+        addr |= cpu.read_data(ptr_addr) << 8;
         addr += cpu.m_y;
 
-        uint8_t result = instr(cpu, cpu.bus().read_data(addr));
-        cpu.bus().write_data(addr, result);
+        uint8_t result = instr(cpu, cpu.read_data(addr));
+        cpu.write_data(addr, result);
     };
 };
 
@@ -543,12 +543,12 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_ax(std::function<uint8_t(Cpu&, uint
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 5;
 
-        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
-        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.read_data(cpu.m_pc++);
+        addr |= cpu.read_data(cpu.m_pc++) << 8;
         addr += cpu.m_x;
 
-        uint8_t result = instr(cpu, cpu.bus().read_data(addr));
-        cpu.bus().write_data(addr, result);
+        uint8_t result = instr(cpu, cpu.read_data(addr));
+        cpu.write_data(addr, result);
     };
 };
 
@@ -557,12 +557,12 @@ std::function<void(Cpu&)> Cpu::addr_mode_rmw_ay(std::function<uint8_t(Cpu&, uint
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 5;
 
-        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
-        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.read_data(cpu.m_pc++);
+        addr |= cpu.read_data(cpu.m_pc++) << 8;
         addr += cpu.m_y;
 
-        uint8_t result = instr(cpu, cpu.bus().read_data(addr));
-        cpu.bus().write_data(addr, result);
+        uint8_t result = instr(cpu, cpu.read_data(addr));
+        cpu.write_data(addr, result);
     };
 };
 
@@ -571,8 +571,8 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_d(std::function<uint8_t(Cpu&)> instr)
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 1;
 
-        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
-        cpu.bus().write_data(addr, instr(cpu));
+        uint8_t addr = cpu.read_data(cpu.m_pc++);
+        cpu.write_data(addr, instr(cpu));
     };
 }
 
@@ -581,10 +581,10 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_a(std::function<uint8_t(Cpu&)> instr)
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 2;
 
-        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
-        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.read_data(cpu.m_pc++);
+        addr |= cpu.read_data(cpu.m_pc++) << 8;
 
-        cpu.bus().write_data(addr, instr(cpu));
+        cpu.write_data(addr, instr(cpu));
     };
 }
 
@@ -593,10 +593,10 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_dx(std::function<uint8_t(Cpu&)> instr
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 2;
 
-        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
+        uint8_t addr = cpu.read_data(cpu.m_pc++);
         addr += cpu.m_x;
 
-        cpu.bus().write_data(addr, instr(cpu));
+        cpu.write_data(addr, instr(cpu));
     };
 }
 
@@ -605,10 +605,10 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_dy(std::function<uint8_t(Cpu&)> instr
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 2;
 
-        uint8_t addr = cpu.bus().read_data(cpu.m_pc++);
+        uint8_t addr = cpu.read_data(cpu.m_pc++);
         addr += cpu.m_y;
 
-        cpu.bus().write_data(addr, instr(cpu));
+        cpu.write_data(addr, instr(cpu));
     };
 }
 
@@ -617,11 +617,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_ax(std::function<uint8_t(Cpu&)> instr
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 3;
 
-        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
-        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.read_data(cpu.m_pc++);
+        addr |= cpu.read_data(cpu.m_pc++) << 8;
         addr += cpu.m_x;
 
-        cpu.bus().write_data(addr, instr(cpu));
+        cpu.write_data(addr, instr(cpu));
     };
 }
 
@@ -630,11 +630,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_ay(std::function<uint8_t(Cpu&)> instr
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 3;
 
-        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
-        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.read_data(cpu.m_pc++);
+        addr |= cpu.read_data(cpu.m_pc++) << 8;
         addr += cpu.m_y;
 
-        cpu.bus().write_data(addr, instr(cpu));
+        cpu.write_data(addr, instr(cpu));
     };
 }
 
@@ -643,13 +643,13 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_ix(std::function<uint8_t(Cpu&)> instr
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 4;
 
-        uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
+        uint8_t ptr_addr = cpu.read_data(cpu.m_pc++);
         ptr_addr += cpu.m_x;
 
-        uint16_t addr = cpu.bus().read_data(ptr_addr++);
-        addr |= cpu.bus().read_data(ptr_addr) << 8;
+        uint16_t addr = cpu.read_data(ptr_addr++);
+        addr |= cpu.read_data(ptr_addr) << 8;
 
-        cpu.bus().write_data(addr, instr(cpu));
+        cpu.write_data(addr, instr(cpu));
     };
 }
 
@@ -658,13 +658,13 @@ std::function<void(Cpu&)> Cpu::addr_mode_w_iy(std::function<uint8_t(Cpu&)> instr
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 4;
 
-        uint8_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
+        uint8_t ptr_addr = cpu.read_data(cpu.m_pc++);
     
-        uint16_t addr = cpu.bus().read_data(ptr_addr++);
-        addr |= cpu.bus().read_data(ptr_addr) << 8;
+        uint16_t addr = cpu.read_data(ptr_addr++);
+        addr |= cpu.read_data(ptr_addr) << 8;
         addr += cpu.m_y;
 
-        cpu.bus().write_data(addr, instr(cpu));
+        cpu.write_data(addr, instr(cpu));
     };
 }
 
@@ -673,8 +673,8 @@ std::function<void(Cpu&)> Cpu::addr_mode_j_a(std::function<void(Cpu&, uint16_t)>
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 1;
 
-        uint16_t addr = cpu.bus().read_data(cpu.m_pc++);
-        addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        uint16_t addr = cpu.read_data(cpu.m_pc++);
+        addr |= cpu.read_data(cpu.m_pc++) << 8;
 
         instr(cpu, addr);
     };
@@ -685,11 +685,11 @@ std::function<void(Cpu&)> Cpu::addr_mode_j_i(std::function<void(Cpu&, uint16_t)>
     return [=](Cpu& cpu) -> void {
         cpu.m_clock_lead += 3;
 
-        uint16_t ptr_addr = cpu.bus().read_data(cpu.m_pc++);
-        ptr_addr |= cpu.bus().read_data(cpu.m_pc++) << 8;
+        uint16_t ptr_addr = cpu.read_data(cpu.m_pc++);
+        ptr_addr |= cpu.read_data(cpu.m_pc++) << 8;
 
-        uint16_t addr = cpu.bus().read_data(ptr_addr);
-        addr |= cpu.bus().read_data(((ptr_addr + 1) & 0x00FF ) | (ptr_addr & 0xFF00)) << 8;
+        uint16_t addr = cpu.read_data(ptr_addr);
+        addr |= cpu.read_data(((ptr_addr + 1) & 0x00FF ) | (ptr_addr & 0xFF00)) << 8;
         instr(cpu, addr);
     };
 }
@@ -729,7 +729,7 @@ uint8_t Cpu::instr_asl(Cpu& cpu, uint8_t arg) {
 
 // branch if carry clear
 void Cpu::instr_bcc(Cpu& cpu) {
-    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
+    int8_t arg = cpu.read_data(cpu.m_pc++);
     if(!cpu.m_flag_c) {
         cpu.m_pc += arg;
     }
@@ -737,7 +737,7 @@ void Cpu::instr_bcc(Cpu& cpu) {
 
 // branch if carry set
 void Cpu::instr_bcs(Cpu& cpu) {
-    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
+    int8_t arg = cpu.read_data(cpu.m_pc++);
     if(cpu.m_flag_c) {
         cpu.m_pc += arg;
     }
@@ -745,7 +745,7 @@ void Cpu::instr_bcs(Cpu& cpu) {
 
 // branch if equal
 void Cpu::instr_beq(Cpu& cpu) {
-    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
+    int8_t arg = cpu.read_data(cpu.m_pc++);
     if(cpu.m_flag_z) {
         cpu.m_pc += arg;
     }
@@ -761,7 +761,7 @@ void Cpu::instr_bit(Cpu& cpu, uint8_t arg) {
 
 // branch if minus
 void Cpu::instr_bmi(Cpu& cpu) {
-    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
+    int8_t arg = cpu.read_data(cpu.m_pc++);
     if(cpu.m_flag_n) {
         cpu.m_pc += arg;
     }
@@ -769,7 +769,7 @@ void Cpu::instr_bmi(Cpu& cpu) {
 
 // branch if not equal
 void Cpu::instr_bne(Cpu& cpu) {
-    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
+    int8_t arg = cpu.read_data(cpu.m_pc++);
     if(!cpu.m_flag_z) {
         cpu.m_pc += arg;
     }
@@ -777,7 +777,7 @@ void Cpu::instr_bne(Cpu& cpu) {
 
 // branch if plus
 void Cpu::instr_bpl(Cpu& cpu) {
-    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
+    int8_t arg = cpu.read_data(cpu.m_pc++);
     if(!cpu.m_flag_n) {
         cpu.m_pc += arg;
     }
@@ -796,7 +796,7 @@ void Cpu::instr_brk(Cpu& cpu) {
 
 // branch if overflow clear
 void Cpu::instr_bvc(Cpu& cpu) {
-    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
+    int8_t arg = cpu.read_data(cpu.m_pc++);
     if(!cpu.m_flag_v) {
         cpu.m_pc += arg;
     }
@@ -804,7 +804,7 @@ void Cpu::instr_bvc(Cpu& cpu) {
 
 // branch if overflow set
 void Cpu::instr_bvs(Cpu& cpu) {
-    int8_t arg = cpu.bus().read_data(cpu.m_pc++);
+    int8_t arg = cpu.read_data(cpu.m_pc++);
     if(cpu.m_flag_v) {
         cpu.m_pc += arg;
     }
@@ -1313,24 +1313,24 @@ void Cpu::instr_il_sbc(Cpu& cpu, uint8_t arg) {
 
 // illegal STA (store A) and STX (store X)
 uint8_t Cpu::instr_il_ahx(Cpu& cpu) {
-    return cpu.m_a & cpu.m_x & (cpu.bus().read_data(cpu.m_pc - 1) + 1);
+    return cpu.m_a & cpu.m_x & (cpu.read_data(cpu.m_pc - 1) + 1);
 }
 
 // illegal STX (store X) & (high byte of addr + 1)
 uint8_t Cpu::instr_il_shx(Cpu& cpu) {
-    return cpu.m_x & (cpu.bus().read_data(cpu.m_pc - 1) + 1);
+    return cpu.m_x & (cpu.read_data(cpu.m_pc - 1) + 1);
 }
 
 // illegal STY (store y) & (high byte of addr + 1)
 uint8_t Cpu::instr_il_shy(Cpu& cpu) {
-    return cpu.m_y & (cpu.bus().read_data(cpu.m_pc - 1) + 1);
+    return cpu.m_y & (cpu.read_data(cpu.m_pc - 1) + 1);
 }
 
 // illegal STA (store A) + TXS (transfer X to S)
 uint8_t Cpu::instr_il_tas(Cpu& cpu) {
     cpu.m_s = cpu.m_a & cpu.m_x;
 
-    return cpu.m_a & cpu.m_x & (cpu.bus().read_data(cpu.m_pc - 1) + 1);
+    return cpu.m_a & cpu.m_x & (cpu.read_data(cpu.m_pc - 1) + 1);
 }
 
 // illegal LDA (load A) + TSX (transfer S to X)
